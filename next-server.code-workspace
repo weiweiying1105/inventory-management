@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "../next-server"
+		},
+		{
+			"path": "../next-client"
+		}
+	],
+  "settings": {}
+}

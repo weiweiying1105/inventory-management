@@ -1,0 +1,426 @@
+[
+  {
+    "productId": 1,
+    "name": "iPhone 13",
+    "price": 5999,
+    "rating": 4.5,
+    "stockQuantity": 100,
+    "image": "https://store.storeimages.cdn-apple.com/8756/as-images.apple.com/is/iphone-13-blue-select-2021?wid=940&hei=1112&fmt=png-alpha&.v=1645572386470"
+  },
+  {
+    "productId": 2,
+    "name": "MacBook Pro",
+    "price": 12999,
+    "rating": 4.8,
+    "stockQuantity": 50,
+    "image": "https://store.storeimages.cdn-apple.com/8756/as-images.apple.com/is/mbp-spacegray-select-202206?wid=904&hei=840&fmt=jpeg&qlt=90&.v=1664497359481"
+  },
+  {
+    "productId": 3,
+    "name": "iPad Pro",
+    "price": 6999,
+    "rating": 4.6,
+    "stockQuantity": 75,
+    "image": "https://store.storeimages.cdn-apple.com/8756/as-images.apple.com/is/ipad-pro-12-select-wifi-spacegray-202104?wid=940&hei=1112&fmt=png-alpha&.v=1617126635000"
+  },
+  {
+    "productId": 4,
+    "name": "AirPods Pro",
+    "price": 1999,
+    "rating": 4.7,
+    "stockQuantity": 200,
+    "image": "https://store.storeimages.cdn-apple.com/8756/as-images.apple.com/is/MQD83?wid=1144&hei=1144&fmt=jpeg&qlt=90&.v=1660803972361"
+  },
+  {
+    "productId": 5,
+    "name": "Apple Watch",
+    "price": 3299,
+    "rating": 4.4,
+    "stockQuantity": 150,
+    "image": "https://store.storeimages.cdn-apple.com/8756/as-images.apple.com/is/MKUQ3_VW_34FR+watch-45-alum-midnight-nc-8s_VW_34FR_WF_CO?wid=1400&hei=1400&trim=1%2C0&fmt=p-jpg&qlt=95&.v=1632171067000%2C1661971867381"
+  },
+  {
+    "productId": 6,
+    "name": "Samsung Galaxy S23",
+    "price": 6999,
+    "rating": 4.6,
+    "stockQuantity": 120,
+    "image": "https://images.samsung.com/is/image/samsung/p6pim/cn/2302/gallery/cn-galaxy-s23-s911-sm-s9110-535565-535565-thumb-534863139"
+  },
+  {
+    "productId": 7,
+    "name": "Dell XPS 15",
+    "price": 11999,
+    "rating": 4.7,
+    "stockQuantity": 45,
+    "image": "https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/dell-client-products/notebooks/xps-notebooks/xps-15-9520/media-gallery/black/laptop-xps-15-9520-t-black-gallery-1.psd?fmt=png-alpha&pscan=auto&scl=1&wid=4000&hei=2800&qlt=100,0&resMode=sharp2&size=4000,2800"
+  },
+  {
+    "productId": 8,
+    "name": "Sony WH-1000XM4",
+    "price": 2499,
+    "rating": 4.8,
+    "stockQuantity": 180,
+    "image": "https://www.sony.com/image/5d02da55df61b6c7c8624874b097e0cc?fmt=png-alpha&wid=900"
+  },
+  {
+    "productId": 9,
+    "name": "Nintendo Switch OLED",
+    "price": 2299,
+    "rating": 4.7,
+    "stockQuantity": 90,
+    "image": "https://assets.nintendo.com/image/upload/f_auto/q_auto/dpr_2.0/c_scale,w_400/ncom/en_US/switch/site-design-update/hardware/switch/nintendo-switch-oled-model-white-set"
+  },
+  {
+    "productId": 10,
+    "name": "LG OLED C1 65\"",
+    "price": 14999,
+    "rating": 4.9,
+    "stockQuantity": 30,
+    "image": "https://www.lg.com/us/images/tvs/md07554746/gallery/D-01.jpg"
+  },
+  {
+    "productId": 11,
+    "name": "Logitech MX Master 3",
+    "price": 799,
+    "rating": 4.6,
+    "stockQuantity": 250,
+    "image": "https://resource.logitech.com/w_900,h_900,c_limit,q_auto,f_auto,dpr_2.0/d_transparent.gif/content/dam/logitech/en/products/mice/mx-master-3s/gallery/mx-master-3s-mouse-top-view-graphite.png"
+  },
+  {
+    "productId": 12,
+    "name": "Razer BlackWidow V3",
+    "price": 999,
+    "rating": 4.5,
+    "stockQuantity": 150,
+    "image": "https://assets3.razerzone.com/GmefkvRxNy6TlxRwJd0_N5Iav_M=/1500x1000/https%3A%2F%2Fhybrismediaprod.blob.core.windows.net%2Fsys-master-phoenix-images-container%2Fh78%2Fh26%2F9081449799710%2Fblackwidow-v3-pro-500x500.png"
+  },
+  {
+    "productId": 13,
+    "name": "Canon EOS R5",
+    "price": 24999,
+    "rating": 4.8,
+    "stockQuantity": 25,
+    "image": "https://www.canon.com.cn/media/image/2020/07/09/7d08b2bc70e54d0b8c9b5e7e5c3cd722_EOS%20R5%20Front%20Slant%20RF24-105mm.jpg"
+  },
+  {
+    "productId": 14,
+    "name": "DJI Mavic Air 2",
+    "price": 6499,
+    "rating": 4.7,
+    "stockQuantity": 60,
+    "image": "https://dji-official-fe.djicdn.com/cms/uploads/a6d2c0d5f5c8e6e1f4c9a4c2c8e6e1f4.png"
+  },
+  {
+    "productId": 15,
+    "name": "Bose QuietComfort 35 II",
+    "price": 1999,
+    "rating": 4.6,
+    "stockQuantity": 140,
+    "image": "https://assets.bose.com/content/dam/Bose_DAM/Web/consumer_electronics/global/products/headphones/qc35_ii/product_silo_images/qc35_ii_black_EC_hero.psd/jcr:content/renditions/cq5dam.web.1000.1000.png"
+  },
+  {
+    "productId": 16,
+    "name": "Microsoft Surface Pro 8",
+    "price": 8999,
+    "rating": 4.5,
+    "stockQuantity": 85,
+    "image": "https://img-prod-cms-rt-microsoft-com.akamaized.net/cms/api/am/imageFileData/RWBrzy?ver=85d4"
+  },
+  {
+    "productId": 17,
+    "name": "Xiaomi Mi Band 7",
+    "price": 249,
+    "rating": 4.4,
+    "stockQuantity": 300,
+    "image": "https://i02.appmifile.com/615_operator_sg/10/05/2022/ce8d1416db4b8a7fc862eda4aa0ea729.png"
+  },
+  {
+    "productId": 18,
+    "name": "ASUS ROG Swift PG279QM",
+    "price": 4999,
+    "rating": 4.7,
+    "stockQuantity": 70,
+    "image": "https://dlcdnwebimgs.asus.com/gain/36E03AA3-3BB0-4B4B-B98D-13A4F1D8549D"
+  },
+  {
+    "productId": 19,
+    "name": "Google Pixel 7 Pro",
+    "price": 6499,
+    "rating": 4.6,
+    "stockQuantity": 110,
+    "image": "https://lh3.googleusercontent.com/Z8CkqJ1RXZ-2kQtH_UxLqFE8S-Hn7oHZ4H3ZM-0fDOXl7KHGtTG_RXwXvkTh-TzaHQHGQ4YlxHQEz_kA7Wc1IxdQqV0k9w=rw-e365-w1440"
+  },
+  {
+    "productId": 20,
+    "name": "Fitbit Versa 4",
+    "price": 1499,
+    "rating": 4.3,
+    "stockQuantity": 160,
+    "image": "https://www.fitbit.com/global/content/dam/fitbit/global/pdp/devices/versa-4/hero-static/black/versa4-black-device-3qt.png"
+  },
+  {
+    "productId": 21,
+    "name": "Sony PlayStation 5",
+    "price": 3899,
+    "rating": 4.8,
+    "stockQuantity": 40,
+    "image": "https://gmedia.playstation.com/is/image/SIEPDC/ps5-product-thumbnail-01-en-14sep21"
+  },
+  {
+    "productId": 22,
+    "name": "Xbox Series X",
+    "price": 3799,
+    "rating": 4.7,
+    "stockQuantity": 45,
+    "image": "https://xbox.azureedge.net/xbox-marketplace-content/xbox-series-x-hero.png"
+  },
+  {
+    "productId": 23,
+    "name": "GoPro HERO11 Black",
+    "price": 3699,
+    "rating": 4.6,
+    "stockQuantity": 80,
+    "image": "https://gopro.com/content/dam/help/hero11-black/product-assets/hero11-black-primary.png"
+  },
+  {
+    "productId": 24,
+    "name": "Samsung 980 PRO 1TB SSD",
+    "price": 999,
+    "rating": 4.8,
+    "stockQuantity": 200,
+    "image": "https://images.samsung.com/is/image/samsung/p6pim/uk/mz-v8p1t0bw/gallery/uk-980-pro-pcie-4-0-nvme-ssd-1tb-mz-v8p1t0bw-thumb-532854796"
+  },
+  {
+    "productId": 25,
+    "name": "Corsair Vengeance RAM 32GB",
+    "price": 899,
+    "rating": 4.7,
+    "stockQuantity": 150,
+    "image": "https://www.corsair.com/medias/sys_master/images/images/h8f/h8d/9584242974750/vengeance-rgb-pro-sl-config/Gallery/VENGEANCE-RGB-PRO-SL-BLACK-01/-vengeance-rgb-pro-sl-config-Gallery-VENGEANCE-RGB-PRO-SL-BLACK-01.png_1200Wx1200H"
+  },
+  {
+    "productId": 26,
+    "name": "AMD Ryzen 9 5950X",
+    "price": 4299,
+    "rating": 4.9,
+    "stockQuantity": 60,
+    "image": "https://www.amd.com/system/files/2020-09/616656-amd-ryzen-9-5000-series-PIB-1260x709_0.png"
+  },
+  {
+    "productId": 27,
+    "name": "NVIDIA RTX 4090",
+    "price": 12999,
+    "rating": 4.8,
+    "stockQuantity": 30,
+    "image": "https://www.nvidia.com/content/dam/en-zz/Solutions/geforce/ada/rtx-4090/geforce-rtx-4090-product-gallery-full-screen-3840-1.jpg"
+  },
+  {
+    "productId": 28,
+    "name": "Elgato Stream Deck",
+    "price": 899,
+    "rating": 4.6,
+    "stockQuantity": 100,
+    "image": "https://edge.elgato.com/cdn-cgi/image/format=auto/https://main.elgato.com/cdn-cgi/image/format=auto/https://main.elgato.com/sites/default/files/2023-05/Stream-Deck-MK.2-BLACK-ANGLE-RIGHT-PLUGGED.png"
+  },
+  {
+    "productId": 29,
+    "name": "Blue Yeti Microphone",
+    "price": 799,
+    "rating": 4.7,
+    "stockQuantity": 120,
+    "image": "https://resource.logitech.com/w_692,c_limit,q_auto,f_auto,dpr_1.0/d_transparent.gif/content/dam/logitech/en/products/cameras/yeti/gallery/yeti-microphone-black-gallery-1.png"
+  },
+  {
+    "productId": 30,
+    "name": "Logitech C920 Webcam",
+    "price": 499,
+    "rating": 4.5,
+    "stockQuantity": 180,
+    "image": "https://resource.logitech.com/w_692,c_limit,q_auto,f_auto,dpr_1.0/d_transparent.gif/content/dam/logitech/en/products/webcams/c920s/gallery/c920s-gallery-1.png"
+  },
+  {
+    "productId": 31,
+    "name": "Kindle Paperwhite",
+    "price": 999,
+    "rating": 4.7,
+    "stockQuantity": 150,
+    "image": "https://m.media-amazon.com/images/I/61PW2+22YFL._AC_SL1000_.jpg"
+  },
+  {
+    "productId": 32,
+    "name": "Beats Studio Buds",
+    "price": 1199,
+    "rating": 4.4,
+    "stockQuantity": 200,
+    "image": "https://www.beatsbydre.com/content/dam/beats/web/product/earbuds/studio-buds/plp/bbd.plpasset.earbuds.studio-buds-v2.jpg.large.2x.jpg"
+  },
+  {
+    "productId": 33,
+    "name": "Anker PowerCore 26800",
+    "price": 299,
+    "rating": 4.6,
+    "stockQuantity": 250,
+    "image": "https://cdn.shopify.com/s/files/1/0493/9834/9974/products/A1277011_TD01_V1_medium.jpg"
+  },
+  {
+    "productId": 34,
+    "name": "Ring Video Doorbell",
+    "price": 799,
+    "rating": 4.5,
+    "stockQuantity": 120,
+    "image": "https://images-na.ssl-images-amazon.com/images/I/71VbHaAqbML._SL1500_.jpg"
+  },
+  {
+    "productId": 35,
+    "name": "Philips Hue Starter Kit",
+    "price": 999,
+    "rating": 4.6,
+    "stockQuantity": 90,
+    "image": "https://images.philips-hue.com/is/image/PhilipsLighting/8719514291171_A1_PAPI"
+  },
+  {
+    "productId": 36,
+    "name": "Sonos One SL",
+    "price": 1499,
+    "rating": 4.7,
+    "stockQuantity": 80,
+    "image": "https://www.sonos.com/content/dam/sonos/images/products/one-sl/one-sl-black-top-view.png"
+  },
+  {
+    "productId": 37,
+    "name": "Rode NT-USB Mini",
+    "price": 599,
+    "rating": 4.5,
+    "stockQuantity": 140,
+    "image": "https://edge.rode.com/images/products/nt-usb-mini/gallery/1.jpg"
+  },
+  {
+    "productId": 38,
+    "name": "Keychron K2 Keyboard",
+    "price": 699,
+    "rating": 4.6,
+    "stockQuantity": 160,
+    "image": "https://cdn.shopify.com/s/files/1/0059/0630/1017/products/Keychron-K2-wireless-mechanical-keyboard-for-Mac-Windows-iOS-RGB-aluminum-frame-hot-swappable-brown-switch_1800x1800.jpg"
+  },
+  {
+    "productId": 39,
+    "name": "Samsung T7 SSD 1TB",
+    "price": 799,
+    "rating": 4.7,
+    "stockQuantity": 180,
+    "image": "https://images.samsung.com/is/image/samsung/p6pim/uk/mu-pc1t0r-ww/gallery/uk-portable-ssd-t7-mu-pc1t0r-ww-thumb-532854767"
+  },
+  {
+    "productId": 40,
+    "name": "Jabra Elite 75t",
+    "price": 899,
+    "rating": 4.5,
+    "stockQuantity": 150,
+    "image": "https://www.jabra.com/-/media/Images/Products/Jabra-Elite-75t/Product/elite-75t-titanium-black-hero.png"
+  },
+  {
+    "productId": 41,
+    "name": "Wacom Intuos Pro",
+    "price": 2499,
+    "rating": 4.8,
+    "stockQuantity": 70,
+    "image": "https://cdn.wacom.com/f/m/2019/01/intuos-pro-medium-pen-tablet.png"
+  },
+  {
+    "productId": 42,
+    "name": "Tile Pro Tracker",
+    "price": 199,
+    "rating": 4.4,
+    "stockQuantity": 200,
+    "image": "https://tile-general.s3.amazonaws.com/site-assets/2021/products/pro/Pro_2022_Black_Front_Facing.png"
+  },
+  {
+    "productId": 43,
+    "name": "UE Boom 3",
+    "price": 699,
+    "rating": 4.5,
+    "stockQuantity": 130,
+    "image": "https://www.ultimateears.com/content/dam/ultimate-ears/images/products/boom3/gallery/boom3-night-black-gallery-01.png"
+  },
+  {
+    "productId": 44,
+    "name": "Nest Learning Thermostat",
+    "price": 1999,
+    "rating": 4.6,
+    "stockQuantity": 85,
+    "image": "https://store.google.com/gb/product/images/nest_learning_thermostat_3rd_gen"
+  },
+  {
+    "productId": 45,
+    "name": "Arlo Pro 4 Camera",
+    "price": 1599,
+    "rating": 4.5,
+    "stockQuantity": 95,
+    "image": "https://www.arlo.com/en-us/images/products/pro-4/default/pro4_default.png"
+  },
+  {
+    "productId": 46,
+    "name": "Crucial MX500 2TB SSD",
+    "price": 1299,
+    "rating": 4.7,
+    "stockQuantity": 110,
+    "image": "https://content.crucial.com/content/dam/crucial/ssd-products/mx500/images/product/crucial-mx500-2-5-inch-ssd.png"
+  },
+  {
+    "productId": 47,
+    "name": "Logitech G Pro X",
+    "price": 899,
+    "rating": 4.6,
+    "stockQuantity": 140,
+    "image": "https://resource.logitechg.com/w_692,c_limit,q_auto,f_auto,dpr_1.0/d_transparent.gif/content/dam/gaming/en/products/pro-x/pro-headset-gallery-1.png"
+  },
+  {
+    "productId": 48,
+    "name": "NZXT H510 Case",
+    "price": 599,
+    "rating": 4.5,
+    "stockQuantity": 75,
+    "image": "https://nzxt.com/assets/cms/34299/1615585055-h510-white-black-mainw.png"
+  },
+  {
+    "productId": 49,
+    "name": "Corsair H100i Cooler",
+    "price": 899,
+    "rating": 4.7,
+    "stockQuantity": 65,
+    "image": "https://www.corsair.com/medias/sys_master/images/images/h42/hcc/9397494095902/base-h100i-rgb-platinum-config/Gallery/H100i_RGB_PLATINUM_01/-base-h100i-rgb-platinum-config-Gallery-H100i-RGB-PLATINUM-01.png_1200Wx1200H"
+  },
+  {
+    "productId": 50,
+    "name": "Elgato Key Light",
+    "price": 1299,
+    "rating": 4.6,
+    "stockQuantity": 90,
+    "image": "https://edge.elgato.com/cdn-cgi/image/format=auto/https://main.elgato.com/sites/default/files/2023-06/Key-Light-FRONT-ON.png"
+  },
+  {
+    "productId": 51,
+    "name": "Samsung Odyssey G7",
+    "price": 4999,
+    "rating": 4.8,
+    "stockQuantity": 45,
+    "image": "https://images.samsung.com/is/image/samsung/p6pim/uk/lc27g75tqsuxen/gallery/uk-odyssey-g7-lc27g75tqsuxen-thumb-532854418"
+  },
+  {
+    "productId": 52,
+    "name": "Sennheiser HD 660S",
+    "price": 3299,
+    "rating": 4.9,
+    "stockQuantity": 55,
+    "image": "https://assets.sennheiser.com/img/25100/x1_desktop_HD_660S_Isofront.jpg"
+  },
+  {
+    "productId": 53,
+    "name": "Shure SM7B",
+    "price": 2499,
+    "rating": 4.8,
+    "stockQuantity": 40,
+    "image": "https://www.shure.com/cdn-cgi/image/format=auto/https://assets.shure.com/f_auto,c_limit,w_1500,q_70/about/images/products/microphones/sm7b/sm7b-hero"
+  }
+]
