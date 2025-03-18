@@ -91,12 +91,11 @@ export default function StoreProvider({
 }: {
   children: React.ReactNode;
 }) {
-  // 使用useRef创建一个AppStore的引用
-  const storeRef = useRef<AppStore | undefined>();
-  // 如果storeRef中没有当前值，则创建一个新的store，并设置监听器
+  // 修改这一行，提供一个初始值 undefined
+  const storeRef = useRef<AppStore | undefined>(undefined);
+  
   if (!storeRef.current) {
     storeRef.current = makeStore();
-    setupListeners(storeRef.current.dispatch);
   }
   // 使用persistStore创建一个持久化的store
   const persistor = persistStore(storeRef.current);

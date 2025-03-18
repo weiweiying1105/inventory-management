@@ -8,7 +8,7 @@
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",  // 将 "bundler" 改为 "node"
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",

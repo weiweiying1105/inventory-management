@@ -20,9 +20,10 @@ const Products = () => {
   } = useGetProductsQuery(searchTerm);
 
   const [createProduct] = useCreateProductMutation();
-  const handleCreateProduct = async (productData: Product) => {
+  const handleCreateProduct = async (productData: NewProduct) => {
     await createProduct(productData);
   };
+
   if (isLoading) {
     return <div className="py-4">Loading...</div>;
   }
