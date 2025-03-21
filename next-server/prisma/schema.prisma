@@ -19,6 +19,7 @@ model Users {
   email  String
 }
 
+
 model Products {
   productId     Int         @id @default(autoincrement()) // 改为 productId
   name          String
@@ -28,8 +29,15 @@ model Products {
   image         String
   sales         Sales[]
   purchases     Purchases[]
+  categoryId  Int?      // 可选的分类 ID
+  category    Category? @relation(fields: [categoryId], references: [id]) // 建立关系
 }
-
+// 产品分类
+model Category {
+  id  Int @id @default(autoincrement())
+  categoryName String
+  products  Products[] // 一个类别下有多个产品，一对多的关系
+}
 model Sales {
   id          Int      @id @default(autoincrement())
   saleId      String   @unique

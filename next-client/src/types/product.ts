@@ -8,3 +8,8 @@ export interface NewProduct {
   stockQuantity: number;
   image: string;
 }
+
+export interface Category {
+  id?: number;
+  categoryName: string
+}

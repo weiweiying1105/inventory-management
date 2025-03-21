@@ -1,7 +1,8 @@
 
+
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { DashboardMetrics } from "@/types/dashboardMetrics.types";
-import { NewProduct, Product } from "@/types/product";
+import { Category, NewProduct, Product } from "@/types/product";
 import { User } from "@/types/user";
 
 export interface ExpenseByCategorySummary {
@@ -12,9 +13,9 @@ export interface ExpenseByCategorySummary {
 }
 // 创建一个api服务，该实例可以用于与后端api进行交互
 export const api = createApi({
-  baseQuery: fetchBaseQuery({ baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL }),
+  baseQuery: fetchBaseQuery({ baseUrl: process.env.NEXT_PUBLIC_BASE_URL }),
   reducerPath: "api", // 定义reducer的路径，用于在store中存储数据.这是Redux Store中唯一的标识符
-  tagTypes: ["DashboardMetrics", "Expenses", "Products", "Users", "Expense"], // 定义标签类型，用于缓存和更新数据
+  tagTypes: ["DashboardMetrics", "Expenses", "Products", "Users", "Expense", "Categories"], // 定义标签类型，用于缓存和更新数据
   endpoints: (build) => ({
 
     // 获取仪表板指标
@@ -52,10 +53,28 @@ export const api = createApi({
       providesTags: ["Users"],
     }),
 
+    // 获取产品分类
+    getCategories: build.query<{ list: Category[] }, string | null>({
+      query: () => '/category',
+      providesTags: ["Categories"],
+    }),
+
+    // 新产品分类
+    createCategory: build.mutation<Category, Category>({
+      query: (newCategory) => ({
+        url: '/category',
+        method: 'POST',
+        body: newCategory
+      }),
+      invalidatesTags: ["Categories"]
+    })
+
+    // 
+
   }),
 })
 // build.query的泛型，第一个为返回类型，第二个为查询参数类型
-export const { useGetDashboardMetricsQuery, useGetExpensesByCategoryQuery, useGetProductsQuery, useCreateProductMutation, useGetUsersQuery } = api;
+export const { useGetDashboardMetricsQuery, useGetExpensesByCategoryQuery, useGetProductsQuery, useCreateProductMutation, useGetUsersQuery, useGetCategoriesQuery, useCreateCategoryMutation } = api;
 
 
 /**

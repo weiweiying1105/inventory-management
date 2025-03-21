@@ -18,6 +18,7 @@ import dashboard from './routes/dashboardRoute'
 import products from './routes/productRoute'
 import User from './routes/userRoute'
 import expense from './routes/expenseRoute'
+import category from './routes/categoryRoute'
 //------------------------------------------------ 配置
 dotenv.config()
 const app = express();
@@ -43,6 +44,7 @@ app.use('/dashboard', dashboard)
 app.use('/products', products)
 app.use('/users', User)
 app.use('/expenses', expense)
+app.use('/category', category)
 // ------------------------------------------------ server
 const port = Number(process.env.PORT) || 3001;
 // 需要添加0.0.0.0来代表监听所有可用的网络接口，而不仅仅是 localhost。

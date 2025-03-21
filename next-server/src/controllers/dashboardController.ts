@@ -44,16 +44,14 @@ export const getDashboardMetrics = async (req: Request, res: Response): Promise<
       }
     })
     res.status(200).json({
-      
-        popularProducts,
-        salesSummary,
-        purchaseSummary,
-        expenseSummary,
-        expenseByCategorySummary
-      
-
+      popularProducts,
+      salesSummary,
+      purchaseSummary,
+      expenseSummary,
+      expenseByCategorySummary
     })
   } catch (error) {
+    console.log('获取dashboard数据失败', error);
     res.status(500).json({
       message: "Error retrieving dashboard metrics",
 
