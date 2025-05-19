@@ -1,7 +1,7 @@
 import React, { ChangeEvent, FormEvent, useState } from "react";
 import Header from "@/app/(components)/Header";
 import { NewProduct } from "@/types/product";
-import { Readex_Pro } from "next/font/google";
+import { useUploadImageMutation } from "../state/api"
 
 
 type CreateProductModalProps = {
@@ -19,15 +19,35 @@ const CreateProductModal = (props: CreateProductModalProps) => {
     stockQuantity: 0,
     image: '',
   })
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [uploadImage] = useUploadImageMutation();
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-      setFormData({ ...formData, image: file.name });
+      try {
+        const formData = new FormData();
+        formData.append('image', file);
+        // const response = await fetch(process.env.NODE_ENV + '/upload', {
+        //   method: 'POST',
+        //   body: formData,
+        // });
+        const { data } = await uploadImage({ image: formData });
+        console.log('成功', data)
+        if (data?.code === 200) {
+          // const data = await response.json();
+          setFormData({ ...formData, image: data.data.url })
+          console.log('成功', data)
+        }
+
+
+      } catch (error) {
+        console.error('Error reading file:', error);
+      }
+      // const reader = new FileReader();
+      // reader.onloadend = () => {
+      //   setImage(reader.result as string);
+      // };
+      // reader.readAsDataURL(file);
+      // setFormData({ ...formData, image: file.name });
     }
   }
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -117,6 +137,9 @@ const CreateProductModal = (props: CreateProductModalProps) => {
             placeholder="image"
             required
           />
+          <div>
+            {formData.image && <img src={formData.image} alt="Product" className="w-20 h-20 object-cover" />}
+          </div>
 
           {/* CREATE ACTIONS */}
           <button

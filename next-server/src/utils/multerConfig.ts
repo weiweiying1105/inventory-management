@@ -31,13 +31,28 @@ const upload = multer({
 
 export const uploadToOSS = async (file: Express.Multer.File): Promise<string> => {
   try {
-    const fileName = file.originalname + `-${Date.now()}`
-    const result = await ossConfig.put(fileName, file.buffer);
+    // 生成唯一的文件名，避免文件名冲突
+    const ext = file.originalname.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    
+    // 指定上传目录
+    const objectName = `products/${fileName}`;
+    
+    const result = await ossConfig.put(objectName, file.buffer);
+    
+    if (!result.url) {
+      throw new Error('OSS返回的URL为空');
+    }
+    
     return result.url;
   } catch (error) {
-    throw new Error('上传到OSS失败!');
+    console.error('OSS上传详细错误:', error);
+    throw new Error(
+      error instanceof Error 
+        ? `上传到OSS失败: ${error.message}` 
+        : '上传到OSS失败: 未知错误'
+    );
   }
-
 }
 
 export default upload;

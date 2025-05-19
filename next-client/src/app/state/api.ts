@@ -46,6 +46,15 @@ export const api = createApi({
       }),
       invalidatesTags: ["Products"],
     }),
+    // 上传图片
+    uploadImage: build.mutation<{ url: string }, { image: File }>({
+      query: ({ image }) => ({
+        url: "/upload",
+        method: "POST",
+        body: image,
+      }),
+      invalidatesTags: ["Products"],
+    }),
 
     // 获取用户
     getUsers: build.query<User[], string | void>({
@@ -74,9 +83,14 @@ export const api = createApi({
   }),
 })
 // build.query的泛型，第一个为返回类型，第二个为查询参数类型
-export const { useGetDashboardMetricsQuery, useGetExpensesByCategoryQuery, useGetProductsQuery, useCreateProductMutation, useGetUsersQuery, useGetCategoriesQuery, useCreateCategoryMutation } = api;
+export const { useGetDashboardMetricsQuery, useGetExpensesByCategoryQuery, useGetProductsQuery, useCreateProductMutation, useGetUsersQuery, useGetCategoriesQuery, useCreateCategoryMutation, useUploadImageMutation } = api;
 
-
+/**
+ * 约定俗成的命名规则
+ * - 以 use 开头
+ * - 查询操作以 Query 结尾
+ * - 增删改操作以 Mutation 结尾
+ */
 /**
  * build.query
  * RTK Query 是 Redux Toolkit 提供的用于处理异步数据获取的库。它提供了一种简单的方式来定义和调用 API 请求，并自动处理数据的缓存、更新和错误处理。
