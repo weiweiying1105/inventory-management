@@ -7,7 +7,7 @@ import Rating from "@/app/(components)/Rating";
 import CreateProductModal from "./CreateProductModal";
 import Image from "next/image";
 import { NewProduct, Product } from '@/types/product'
-
+import { Button } from '@mui/material';
 
 const Products = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -21,6 +21,12 @@ const Products = () => {
 
   const [createProduct] = useCreateProductMutation();
   const handleCreateProduct = async (productData: NewProduct) => {
+    for (const key in productData) {
+      if (productData[key as keyof NewProduct] === '') {
+        console.log(key + '为空', productData[key as keyof NewProduct]);
+        return;
+      }
+    }
     await createProduct(productData);
   };
 
@@ -72,26 +78,33 @@ const Products = () => {
               key={product.productId}
               className="border bg-white shadow rounded-md p-4 max-w-full w-full mx-auto"
             >
-              <div className="flex flex-col items-center">
-                {/* <Image
+              <div className="flex justify-start items-center gap-5">
+                <Image
                   src={product.image}
                   alt={product.name}
                   width={150}
                   height={150}
                   className="mb-3 rounded-2xl w-36 h-36"
-                /> */}
-                <h3 className="text-lg text-gray-900 font-semibold">
-                  {product.name}
-                </h3>
-                <p className="text-gray-800">${product.price.toFixed(2)}</p>
-                <div className="text-sm text-gray-600 mt-1">
-                  Stock: {product.stockQuantity}
-                </div>
-                {product.rating && (
-                  <div className="flex items-center mt-2">
-                    <Rating rating={product.rating} />
+                />
+                <div className="flex-1">
+                  <h3 className="text-lg text-gray-900 font-semibold">
+                    {product.name}
+                  </h3>
+                  <p className="text-gray-800">${product.price.toFixed(2)}</p>
+                  <div className="text-sm text-gray-600 mt-1">
+                    库存: {product.stockQuantity}
                   </div>
-                )}
+                  <div className="flex justify-between flex-1">
+                    {product.rating && (
+                      <div className="flex items-center mt-2">
+                        <Rating rating={product.rating} />
+                      </div>
+                    )}
+                    <Button variant="outlined" color="primary" size="small" >
+                      编辑
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           ))

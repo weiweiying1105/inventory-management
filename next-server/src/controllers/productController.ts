@@ -25,22 +25,45 @@ export const getAllProducts = async (req: Request, res: Response): Promise<void>
 
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const { name, price, rating, stockQuantity } = req.body;
-    let imageUrl = '';
-    if (req.file) {
-      imageUrl = await uploadToOSS(req.file);
+    const { name, price, rating, stockQuantity, image } = req.body;
+
+    if (!name || !price || !stockQuantity) {
+      return res.status(400).json({
+        error: '产品名称、价格和库存量为必填项'
+      });
     }
+
+    // Check if product with same name exists
+    const existingProduct = await prisma.products.findFirst({
+      where: { name }
+    });
+
+    if (existingProduct) {
+      return res.status(400).json({
+        success: false,
+        error: '产品名称已存在'
+      });
+    }
+
     const product = await prisma.products.create({
       data: {
-        name: name,
-        price: price,
-        rating: rating,
-        stockQuantity: stockQuantity,
-        image: imageUrl// Add the required image field
+        name,
+        price: Number(price),
+        rating: rating ? Number(rating) : 0,
+        stockQuantity: Number(stockQuantity),
+        image: image || ''
       }
-    })
-    res.json(product)
+    });
+
+    res.status(201).json({
+      success: true,
+      data: product
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Error creating product' })
+    console.error('创建产品错误:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : '创建产品失败'
+    });
   }
 }

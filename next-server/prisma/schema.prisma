@@ -96,3 +96,10 @@ model ExpenseByCategory {
   date                DateTime
   expenseSummary      ExpenseSummary @relation(fields: [expenseSummaryId], references: [expenseSummaryId])
 }
+
+model Pictures {
+  id Int @id @default(autoincrement())
+  url String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

@@ -17,25 +17,22 @@ const CreateProductModal = (props: CreateProductModalProps) => {
     price: 0,
     rating: 0,
     stockQuantity: 0,
-    image: '',
+    image: ''
   })
   const [uploadImage] = useUploadImageMutation();
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       try {
-        const formData = new FormData();
-        formData.append('image', file);
-        // const response = await fetch(process.env.NODE_ENV + '/upload', {
-        //   method: 'POST',
-        //   body: formData,
-        // });
-        const { data } = await uploadImage({ image: formData });
-        console.log('成功', data)
+        const fd = new FormData();
+        fd.append('image', file);
+
+        const { data } = await uploadImage({ image: fd });
+        // console.log('成功', data)
         if (data?.code === 200) {
           // const data = await response.json();
           setFormData({ ...formData, image: data.data.url })
-          console.log('成功', data)
+          console.log('成功', formData)
         }
 
 
@@ -60,6 +57,8 @@ const CreateProductModal = (props: CreateProductModalProps) => {
   }
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    // console.log(formData)
+    // return;
     onCreate(formData);
     onClose()
   }

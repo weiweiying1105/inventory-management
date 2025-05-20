@@ -1,12 +1,10 @@
 import { Inter } from 'next/font/google'
-
-const inter = Inter({ subsets: ['latin'] })
-
-// 在您的布局组件中使用这个字体
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { DashboardWrapper } from "./DashboardWrapper";
+import ThemeRegistry from './ThemeRegistry';
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -29,10 +27,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <DashboardWrapper>{children}</DashboardWrapper>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <ThemeRegistry>
+          <DashboardWrapper>{children}</DashboardWrapper>
+        </ThemeRegistry>
       </body>
     </html>
   );

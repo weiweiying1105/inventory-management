@@ -1,11 +1,10 @@
 "use client"
-import { Menu, LucideIcon, LayoutDashboard, Package, Clipboard, Users, Settings, CircleDollarSign, CircleDollarSignIcon } from "lucide-react"
+import { Menu, LucideIcon, LayoutDashboard, Package, Clipboard, Users, Settings, CircleDollarSign, CircleDollarSignIcon, Image } from "lucide-react"
 import { useAppSelector } from "@/app/redux"
 import { setIsSidebarCollapsed } from "@/app/state"
 import { useAppDispatch } from "@/app/redux"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import Image from "next/image"
 interface SideBarLink {
   href: string;
   icon: LucideIcon;
@@ -17,41 +16,46 @@ const links: SideBarLink[] = [
   {
     href: '/dashboard',
     icon: LayoutDashboard,
-    label: 'Dashboard',
+    label: '首页',
     isCollapsed: false,
   },
   {
-    label: 'Inventory',
+    label: '库存管理',
     href: '/inventory',
     icon: Package,
     isCollapsed: false,
   },
   {
-    label: 'Category',
+    label: '分类管理',
     href: '/category',
     icon: CircleDollarSignIcon,
     isCollapsed: false,
   },
   {
-    label: 'Products',
+    label: '产品管理',
     href: '/products',
     icon: Clipboard,
     isCollapsed: false,
+  }, {
+    label: '图片管理',
+    href: '/pictures',
+    icon: Image,
+    isCollapsed: false,
   },
   {
-    label: "Users",
+    label: "用户管理",
     href: '/users',
     icon: Users,
     isCollapsed: false,
   },
   {
-    label: "Settings",
+    label: "设置",
     href: '/settings',
     icon: Settings,
     isCollapsed: false,
   },
   {
-    label: 'Expenses',
+    label: '费用管理',
     href: '/expenses',
     icon: CircleDollarSign,
     isCollapsed: false,
