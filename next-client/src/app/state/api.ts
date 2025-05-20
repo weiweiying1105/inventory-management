@@ -3,6 +3,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { DashboardMetrics } from "@/types/dashboardMetrics.types";
 import { Category, NewProduct, Product } from "@/types/product";
+import { Image } from "@/types/image";
 import { User } from "@/types/user";
 
 export interface ExpenseByCategorySummary {
@@ -76,9 +77,19 @@ export const api = createApi({
         body: newCategory
       }),
       invalidatesTags: ["Categories"]
-    })
+    }),
 
-    // 
+    // 获取图片分页<返回值类型，入参类型>
+    getImagePage: build.mutation<{ list: Image[] }, { page: number, size: number }>({
+      query: ({ page, size }) => ({
+        url: '/picture/list',
+        method: 'GET',
+        params: {
+          page,
+          size
+        }
+      })
+    })
 
   }),
 })
@@ -115,3 +126,4 @@ export const { useGetDashboardMetricsQuery, useGetExpensesByCategoryQuery, useGe
  *  - 如果数据发生了变化，RTK Query 会自动更新缓存的数据，并在后续的请求中返回最新的数据
  * 
  */
+
