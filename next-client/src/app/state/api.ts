@@ -3,9 +3,8 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { DashboardMetrics } from "@/types/dashboardMetrics.types";
 import { Category, NewProduct, Product } from "@/types/product";
-import { Image } from "@/types/image";
 import { User } from "@/types/user";
-
+import { Image } from "@/types/image";
 export interface ExpenseByCategorySummary {
   expenseByCategorySummaryId: string;
   category: string;
@@ -16,9 +15,8 @@ export interface ExpenseByCategorySummary {
 export const api = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: process.env.NEXT_PUBLIC_BASE_URL }),
   reducerPath: "api", // 定义reducer的路径，用于在store中存储数据.这是Redux Store中唯一的标识符
-  tagTypes: ["DashboardMetrics", "Expenses", "Products", "Users", "Expense", "Categories"], // 定义标签类型，用于缓存和更新数据
+  tagTypes: ["DashboardMetrics", "Expenses", "Products", "Users", "Expense", "Categories", "Img"], // 定义标签类型，用于缓存和更新数据
   endpoints: (build) => ({
-
     // 获取仪表板指标
     getDashboardMetrics: build.query<DashboardMetrics, void>({
       query: () => "/dashboard",
@@ -80,7 +78,7 @@ export const api = createApi({
     }),
 
     // 获取图片分页<返回值类型，入参类型>
-    getImagePage: build.mutation<{ list: Image[] }, { page: number, size: number }>({
+    getImagePage: build.query<{ list: Image[] }, { page: number, size: number }>({
       query: ({ page, size }) => ({
         url: '/picture/list',
         method: 'GET',
@@ -88,13 +86,23 @@ export const api = createApi({
           page,
           size
         }
-      })
-    })
+      }),
+      providesTags: ["Img"]
+    }),
+    // 保存图片
+    savePicture: build.mutation<{ url: string }, { url: string, name: string }>({
+      query: ({ url, name }) => ({
+        url: '/picture/add',
+        method: 'POST',
+        body: { url, name },
+      }),
+      invalidatesTags: ["Img"]
+    }),
 
   }),
 })
 // build.query的泛型，第一个为返回类型，第二个为查询参数类型
-export const { useGetDashboardMetricsQuery, useGetExpensesByCategoryQuery, useGetProductsQuery, useCreateProductMutation, useGetUsersQuery, useGetCategoriesQuery, useCreateCategoryMutation, useUploadImageMutation } = api;
+export const { useSavePictureMutation, useGetImagePageQuery, useGetDashboardMetricsQuery, useGetExpensesByCategoryQuery, useGetProductsQuery, useCreateProductMutation, useGetUsersQuery, useGetCategoriesQuery, useCreateCategoryMutation, useUploadImageMutation } = api;
 
 /**
  * 约定俗成的命名规则
@@ -127,3 +135,14 @@ export const { useGetDashboardMetricsQuery, useGetExpensesByCategoryQuery, useGe
  * 
  */
 
+/**
+ * invalidatesTags 和 providesTags 在 RTK Query 中有不同的用途：
+ * 1. providesTags：
+ *    - 用于Query操作
+ *    - 用于指定查询操作返回的数据应该被缓存的标签。
+ *    - 当查询操作返回的数据被缓存时，它会被标记为具有指定的标签。
+ * 2. invalidatesTags：
+ *    - 用于Mutation操作
+ *    - 用于指定当某个Mutation操作被调用时，应该使哪些缓存的数据失效。
+ *    - 当Mutation操作被调用时，它会使所有标记为具有指定标签的缓存数据失效，从而导致后续的查询操作重新调用接口获取最新的数据。
+ */

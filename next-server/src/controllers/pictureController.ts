@@ -37,3 +37,26 @@ export const getAllPictures = async (req: Request, res: Response) => {
     });
   }
 }
+
+
+// 保存图片
+export const addAllPictures = async (req: Request, res: Response) => {
+  try {
+    const { url, name } = req.body;
+    const picture = prisma.pictures.create({
+      data: {
+        url,
+        name
+      }
+    });
+    res.status(200).json({
+      success: true,
+      data: picture
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: '保存图片失败'
+    });
+  }
+}

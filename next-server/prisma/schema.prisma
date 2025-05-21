@@ -100,6 +100,7 @@ model ExpenseByCategory {
 model Pictures {
   id Int @id @default(autoincrement())
   url String
+  name String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
