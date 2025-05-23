@@ -21,6 +21,7 @@ import expense from './routes/expenseRoute'
 import category from './routes/categoryRoute'
 import uploadRouter from './routes/upload';
 import PictureRouter from './routes/pictureRoute'
+import AuthRouter from './routes/authRoute'
 //------------------------------------------------ 配置
 dotenv.config()
 const app = express();
@@ -49,6 +50,7 @@ app.use('/expenses', expense)
 app.use('/category', category)
 app.use('/upload', uploadRouter)
 app.use('/picture', PictureRouter)
+app.use('/auth', AuthRouter)
 // ------------------------------------------------ server
 const port = Number(process.env.PORT) || 3001;
 // 需要添加0.0.0.0来代表监听所有可用的网络接口，而不仅仅是 localhost。

@@ -98,11 +98,19 @@ export const api = createApi({
       }),
       invalidatesTags: ["Img"]
     }),
+    //登录 <返回值类型，入参类型>
+    login: build.mutation<{ token: string }, { email: string, password: string }>({
+      query: ({ email, password }) => ({
+        url: '/login',
+        method: 'POST',
+        body: { email, password },
+      }),
+    }),
 
   }),
 })
 // build.query的泛型，第一个为返回类型，第二个为查询参数类型
-export const { useSavePictureMutation, useGetImagePageQuery, useGetDashboardMetricsQuery, useGetExpensesByCategoryQuery, useGetProductsQuery, useCreateProductMutation, useGetUsersQuery, useGetCategoriesQuery, useCreateCategoryMutation, useUploadImageMutation } = api;
+export const { useLoginMutation, useSavePictureMutation, useGetImagePageQuery, useGetDashboardMetricsQuery, useGetExpensesByCategoryQuery, useGetProductsQuery, useCreateProductMutation, useGetUsersQuery, useGetCategoriesQuery, useCreateCategoryMutation, useUploadImageMutation } = api;
 
 /**
  * 约定俗成的命名规则

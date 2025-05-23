@@ -8,15 +8,17 @@ import {
   Box,
   Typography
 } from '@mui/material'
+import { ContentCopy } from '@mui/icons-material';
 import { Image } from '@/types/image'
-import { useUploadImageMutation, useGetImagePageQuery } from "../state/api"
-
+import { useUploadImageMutation, useGetImagePageQuery, useSavePictureMutation } from "../state/api"
+import { Pagination } from '@mui/material'
 const Pictures = () => {
   const [open, setOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState<FormData | null>(null)
   const [uploadImage] = useUploadImageMutation();
   const [savePicture] = useSavePictureMutation();
-  const [getImagePage] = useGetImagePageQuery();
+  const SIZE = 100;
+  const [page, setPage] = useState(1)
   const [imgList, setImgList] = useState<Image[]>([])
   const [formData, setFormData] = useState({
     url: '',
@@ -32,6 +34,22 @@ const Pictures = () => {
       });
     }
   }
+
+
+
+  // 修改这里：直接传入参数对象
+  // 修改这里，添加 refetch
+  const { data: imageData, refetch } = useGetImagePageQuery({
+    page: page,
+    size: SIZE
+  });
+  useEffect(() => {
+    console.log('imageData', imageData);
+    if (imageData?.list) {
+      setImgList(imageData.list);
+    }
+  }, [imageData, page]);
+
 
 
 
@@ -56,35 +74,23 @@ const Pictures = () => {
           url: '',
           name: '',
         });
+        refetch(); // 刷新图片列表
       }
     } catch (error) {
       console.error('保存图片失败:', error);
     }
   }
-  const SIZE = 100;
-  const [page, setPage] = useState(1)
-  useEffect(() => {
-    const fetchPictures = async () => {
-      try {
-        const { data } = await getImagePage({
-          page: page,
-          size: SIZE
-        });
-        if (data?.code === 200) {
-          setImgList(data.list);
-        }
-      } catch (error) {
-        console.error('获取图片失败:', error);
-      }
-    };
-    fetchPictures();
-  }, [page])
+
+  const handleCopyLink = (url: string) => {
+    navigator.clipboard.writeText(url);
+  }
 
 
   return (<div>
-    <Button variant="contained" onClick={() => setOpen(true)}>新增图片</Button>
-    <ImageList sx={{ width: 500, height: 450 }}>
-
+    <div className='mb-[20px]'>
+      <Button variant="contained" onClick={() => setOpen(true)} >新增图片</Button>
+    </div>
+    <ImageList sx={{ width: 450, height: 450 }}>
       {imgList.map((item) => (
         <ImageListItem key={item.url}>
           <img
@@ -99,8 +105,10 @@ const Pictures = () => {
             actionIcon={
               <IconButton
                 sx={{ color: 'rgba(255, 255, 255, 0.54)' }}
-                aria-label={`info about ${item.name}`}
+                aria-label={`copy link for ${item.url}`}
+                onClick={() => handleCopyLink(item.url)}
               >
+                <ContentCopy />
               </IconButton>
             }
           />
@@ -108,7 +116,11 @@ const Pictures = () => {
       ))}
     </ImageList>
 
-
+    <Pagination
+      count={Math.ceil(imageData?.pagination?.total || 0 / SIZE)}
+      page={page}
+      onChange={(_, value) => handlePageChange(value)}
+    />
 
     <Dialog open={open} onClose={() => setOpen(false)} maxWidth="lg">
       <DialogTitle>上传图片</DialogTitle>

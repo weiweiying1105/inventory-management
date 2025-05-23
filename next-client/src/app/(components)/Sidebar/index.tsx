@@ -1,5 +1,5 @@
 "use client"
-import { Menu, LucideIcon, LayoutDashboard, Package, Clipboard, Users, Settings, CircleDollarSign, CircleDollarSignIcon, Image } from "lucide-react"
+import { Menu, LucideIcon, LayoutDashboard, Package, Clipboard, Users, Settings, CircleDollarSign, CircleDollarSignIcon, Image, Handshake } from "lucide-react"
 import { useAppSelector } from "@/app/redux"
 import { setIsSidebarCollapsed } from "@/app/state"
 import { useAppDispatch } from "@/app/redux"
@@ -40,6 +40,11 @@ const links: SideBarLink[] = [
     label: '图片管理',
     href: '/pictures',
     icon: Image,
+    isCollapsed: false,
+  }, {
+    label: "客户管理",
+    href: '/customers',
+    icon: Handshake,
     isCollapsed: false,
   },
   {

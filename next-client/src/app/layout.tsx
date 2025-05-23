@@ -1,9 +1,11 @@
+"use client"
 import { Inter } from 'next/font/google'
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { DashboardWrapper } from "./DashboardWrapper";
 import ThemeRegistry from './ThemeRegistry';
+import '@/app/globals.css'
+import LayoutWrapper from './components/LayoutWrapper';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,7 +31,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeRegistry>
-          <DashboardWrapper>{children}</DashboardWrapper>
+          <LayoutWrapper>{children}</LayoutWrapper>
         </ThemeRegistry>
       </body>
     </html>

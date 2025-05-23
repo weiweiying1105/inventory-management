@@ -43,7 +43,13 @@ export const getAllPictures = async (req: Request, res: Response) => {
 export const addAllPictures = async (req: Request, res: Response) => {
   try {
     const { url, name } = req.body;
-    const picture = prisma.pictures.create({
+    if (!url || !name) {
+      return res.status(400).json({
+        success: false,
+        error: 'URL和名称不能为空'
+      });
+    }
+    const picture = await prisma.pictures.create({
       data: {
         url,
         name
