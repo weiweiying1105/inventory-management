@@ -25,17 +25,53 @@ model Users {
 
 
 model Products {
-  productId     Int         @id @default(autoincrement()) // 改为 productId
-  name          String
-  price         Float
-  rating        Float
-  stockQuantity Int
-  image         String
-  sales         Sales[]
-  purchases     Purchases[]
-  categoryId  Int?      // 可选的分类 ID
-  category    Category? @relation(fields: [categoryId], references: [id]) // 建立关系
+  productId   Int         @id @default(autoincrement())
+  name        String
+  price       Float       // 建议价格
+  rating      Float?
+  image       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  skus        Sku[]
+  specGroups  SpecGroup[]
+  category    Category?   @relation(fields: [categoryId], references: [id])
+  categoryId  Int?
+  sales       Sales[]
+  purchases   Purchases[]
 }
+
+// 规格选项组（如颜色、尺寸等）
+model SpecGroup {
+  id        Int         @id @default(autoincrement())
+  name      String      // 规格组名称，如"颜色"
+  productId Int
+  product   Products    @relation(fields: [productId], references: [productId])
+  values    SpecValue[] // 规格值，如"红色"、"蓝色"
+}
+
+// 规格值
+model SpecValue {
+  id          Int       @id @default(autoincrement())
+  value       String    // 具体的规格值
+  groupId     Int
+  group       SpecGroup @relation(fields: [groupId], references: [id])
+  skus        Sku[]     // 关联的SKU
+}
+
+// SKU表（删除重复的定义，保留这一个）
+model Sku {
+  id            Int         @id @default(autoincrement())
+  productId     Int
+  product       Products    @relation(fields: [productId], references: [productId])
+  specValues    SpecValue[] // 规格值组合
+  price         Float       // SKU价格
+  stock         Int         // 库存
+  code          String?     // SKU编码
+  isDefault     Boolean     @default(false) // 是否为默认SKU
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
 // 产品分类
 model Category {
   id  Int @id @default(autoincrement())
@@ -107,4 +143,21 @@ model Pictures {
   name String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+
+model Customers {
+  id Int @id @default(autoincrement())
+  openid String @unique
+  session_key String? 
+  phone  String? @unique
+  avatarUrl String?
+  nickName String?
+  gender Int?
+  country     String?  // 国家
+  province    String?  // 省份
+  city        String?  // 城市
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lastLoginAt DateTime @default(now()) // 最后登录时间
 }
