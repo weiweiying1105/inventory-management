@@ -101,7 +101,7 @@ export const api = createApi({
     //登录 <返回值类型，入参类型>
     login: build.mutation<{ token: string }, { email: string, password: string }>({
       query: ({ email, password }) => ({
-        url: '/login',
+        url: '/auth/login',
         method: 'POST',
         body: { email, password },
       }),

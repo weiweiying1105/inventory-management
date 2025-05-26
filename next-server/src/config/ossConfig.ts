@@ -1,4 +1,7 @@
 import OSS from 'ali-oss'
+import dotenv from 'dotenv'
+// 确保在创建 OSS 实例之前加载环境变量
+dotenv.config()
 
 export const ossConfig = new OSS({
   region: 'oss-cn-beijing',

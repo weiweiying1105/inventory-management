@@ -1,6 +1,6 @@
 "use client"
-import { Inter } from 'next/font/google'
-import type { Metadata } from "next";
+import { Providers } from './providers'
+import { usePathname } from 'next/navigation';
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ThemeRegistry from './ThemeRegistry';
@@ -17,22 +17,22 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "InventoryManagement",
-  description: "InventoryManagement website",
-};
+
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const isLoginPage = usePathname() === '/login';
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased ${isLoginPage?'bg-[url("/login_bg.jpg")] bg-cover bg-center bg-no-repeat':''}` }>
+        <Providers>
         <ThemeRegistry>
           <LayoutWrapper>{children}</LayoutWrapper>
         </ThemeRegistry>
+        </Providers>
       </body>
     </html>
   );

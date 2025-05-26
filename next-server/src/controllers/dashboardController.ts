@@ -1,6 +1,18 @@
 
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+interface ExpenseSummary {
+  category: string;
+  total: number;
+  amount: number
+}
+interface ExpenseSummaryResponse {
+  category: string;
+  date: Date;
+  expenseSummaryId: string;
+  expenseByCategoryId: string;
+  amount: string;
+}
 
 const prisma = new PrismaClient();
 export const getDashboardMetrics = async (req: Request, res: Response): Promise<void> => {
@@ -37,12 +49,10 @@ export const getDashboardMetrics = async (req: Request, res: Response): Promise<
         date: "desc",
       },
     });
-    const expenseByCategorySummary = expenseByCategory.map((item) => {
-      return {
-        ...item,
-        amount: item.amount.toString()
-      }
-    })
+    const expenseByCategorySummary = expenseByCategory.map((item) => ({
+      ...item,
+      amount: item.amount.toString()
+    }))
     res.status(200).json({
       popularProducts,
       salesSummary,
@@ -50,6 +60,30 @@ export const getDashboardMetrics = async (req: Request, res: Response): Promise<
       expenseSummary,
       expenseByCategorySummary
     })
+  } catch (error) {
+    console.log('获取dashboard数据失败', error);
+    res.status(500).json({
+      message: "Error retrieving dashboard metrics",
+
+    })
+  }
+}
+
+
+export const getExpenseByCategory = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const expenseByCategory = await prisma.expenseByCategory.findMany({
+      orderBy: {
+        date: 'desc'
+      }
+    })
+
+    const expenseByCategorySummary = expenseByCategory.map((item) => ({
+      ...item,
+      amount: item.amount.toString(),
+    }))
+
+    res.status(200).json(expenseByCategorySummary)
   } catch (error) {
     console.log('获取dashboard数据失败', error);
     res.status(500).json({

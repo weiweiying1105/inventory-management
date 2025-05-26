@@ -1,6 +1,16 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+
 const prisma = new PrismaClient();
+
+interface ExpenseCategoryResponse {
+  expenseByCategoryId: string;
+  expenseSummaryId: string;
+  category: string;
+  amount: string;
+  date: Date;
+}
+
 export const getExpenseByCategory = async (req: Request, res: Response): Promise<void> => {
   try {
     const expenseByCategorySummaryRaw = await prisma.expenseByCategory.findMany({
@@ -9,12 +19,10 @@ export const getExpenseByCategory = async (req: Request, res: Response): Promise
       }
     })
 
-    const expenseByCategorySummary = expenseByCategorySummaryRaw.map((expense) => {
-      (item: any) => ({
-        ...item,
-        amount: item.amount.toString(),
-      })
-    })
+    const expenseByCategorySummary = expenseByCategorySummaryRaw.map((expense) => ({
+      ...expense,
+      amount: expense.amount.toString(),
+    }))
 
     res.status(200).json(
       expenseByCategorySummary

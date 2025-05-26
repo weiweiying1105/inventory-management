@@ -43,7 +43,7 @@ const LoginPage = () => {
   };
 
   return (
-    <Container component="main" maxWidth="xs">
+    <Container component="main" maxWidth="xs"  >
       <Box
         sx={{
           minHeight: '100vh',
@@ -103,6 +103,7 @@ const LoginPage = () => {
             >
               登录
             </Button>
+            
           </Box>
         </Paper>
       </Box>

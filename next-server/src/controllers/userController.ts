@@ -20,6 +20,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     }
     // 验证密码
     const isValidPassword = await bcrypt.compare(password, user.password);
+    console.log('isValidPassword', isValidPassword, typeof isValidPassword)
     if (!isValidPassword) {
       return res.status(500).json({ error: '密码错误' });
     }
@@ -27,6 +28,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
       expiresIn: '24h'
     });
+    console.log('token', token)
 
     res.json({
       message: '登录成功',
@@ -76,7 +78,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       }
     });
   } catch (error) {
-    res.status(500).json({ message: '注册错误' });
+    res.status(500).json({ message: '注册错误', error });
   }
 }
 
