@@ -8,5 +8,5 @@ export const ossConfig = new OSS({
   internal: false,
   secure: true,
   endpoint: 'oss-cn-beijing.aliyuncs.com',  // 添加正确的 endpoint
-  cname: false
+  cname: false, // 是否使用自定义域名
 })

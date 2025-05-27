@@ -23,20 +23,38 @@ async function main() {
 
   // Seed products first and store their IDs
   const productIdMap = new Map();
+  // for (const product of productsData) {
+  //   const createdProduct = await prisma.products.create({
+  //     data: {
+  //       productId: product.productId,
+  //       name: product.name,
+  //       description: product.description,
+  //       rating: product.rating,
+  //       image: product.image
+  //     }
+  //   });
+  //   productIdMap.set(product.productId, createdProduct.productId);
+  // }
   for (const product of productsData) {
-    const createdProduct = await prisma.products.create({
+    await prisma.products.create({
       data: {
-        productId: product.productId,
         name: product.name,
-        price: product.price,
-        rating: product.rating,
-        stockQuantity: product.stockQuantity,
-        image: product.image
+        rating: product.rating || 0,
+        image: product.image || '',
+        unit: '件',
+        skus: {
+          create: {
+            retailPrice: product.price,    // 使用 price 创建 SKU
+            wholesalePrice: product.price,
+            memberPrice: product.price,
+            stock: 100,
+            isDefault: true,
+            code: `${product.name}-default`
+          }
+        }
       }
     });
-    productIdMap.set(product.productId, createdProduct.productId);
   }
-
   // Seed sales with correct product references
   for (const sale of salesData) {
     await prisma.sales.create({

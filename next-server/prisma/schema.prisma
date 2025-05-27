@@ -25,19 +25,42 @@ model Users {
 
 
 model Products {
-  productId   Int         @id @default(autoincrement())
-  name        String
-  price       Float       // 建议价格
-  rating      Float?
-  image       String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  skus        Sku[]
-  specGroups  SpecGroup[]
-  category    Category?   @relation(fields: [categoryId], references: [id])
-  categoryId  Int?
-  sales       Sales[]
-  purchases   Purchases[]
+  productId     Int         @id @default(autoincrement())
+  name          String      // 商品名称
+  categoryId    Int?        // 分类ID
+  category      Category?   @relation(fields: [categoryId], references: [id])
+  unit          String      // 单位（如：条、kg、100g等）
+  storageMethod String?     // 储存方式（如：冷藏、常温等）
+  description   String?     // 商品描述
+  image         String?     // 商品图片
+  rating        Float?      // 评分
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  skus          Sku[]
+  specGroups    SpecGroup[]
+  sales         Sales[]
+  purchases     Purchases[]
+  isPopular     Boolean?     @default(false)
+  isHot         Boolean?     @default(false)
+  isNew         Boolean?     @default(false)
+  isRecommend   Boolean?     @default(false)
+}
+
+model Sku {
+  id            Int         @id @default(autoincrement())
+  productId     Int
+  product       Products    @relation(fields: [productId], references: [productId])
+  specValues    SpecValue[] // 规格值组合
+  retailPrice   Float       // 零售价
+  wholesalePrice Float      // 批发价
+  memberPrice   Float?      // 会员价
+  weight        Float?      // 重量（如：7.5-8.5kg）
+  packageSize   String?     // 包装规格（如：40g、100g）
+  stock         Int         // 库存
+  code          String?     // SKU编码
+  isDefault     Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 }
 
 // 规格选项组（如颜色、尺寸等）
@@ -58,25 +81,17 @@ model SpecValue {
   skus        Sku[]     // 关联的SKU
 }
 
-// SKU表（删除重复的定义，保留这一个）
-model Sku {
-  id            Int         @id @default(autoincrement())
-  productId     Int
-  product       Products    @relation(fields: [productId], references: [productId])
-  specValues    SpecValue[] // 规格值组合
-  price         Float       // SKU价格
-  stock         Int         // 库存
-  code          String?     // SKU编码
-  isDefault     Boolean     @default(false) // 是否为默认SKU
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-}
 
 // 产品分类
 model Category {
-  id  Int @id @default(autoincrement())
-  categoryName String
-  products  Products[] // 一个类别下有多个产品，一对多的关系
+  id              Int         @id @default(autoincrement())
+  categoryName    String
+  subCategoryName String?
+  description     String?
+  parentId        Int?
+  parent          Category?   @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  subCategory     Category[]  @relation("CategoryHierarchy")
+  products        Products[]
 }
 model Sales {
   id          Int      @id @default(autoincrement())

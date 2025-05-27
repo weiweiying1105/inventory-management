@@ -1,79 +1,110 @@
+import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-import { Response, Request } from "express";
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
-export const getAllategory = async (req: Request, res: Response) => {
+// 获取所有分类（包含层级结构）
+export const getAllCategories = async (req: Request, res: Response) => {
   try {
-    const category = await prisma.category.findMany();
-    res.status(200).json({
-      list: category
-    })
+    const categories = await prisma.category.findMany({
+      where: {
+        AND: [
+          { parentId: null }  // 修改查询条件格式
+        ]
+      },
+      include: {
+        subCategory: {
+          include: {
+            subCategory: true
+          }
+        },
+        products: true
+      }
+    });
+
+    res.json({
+      success: true,
+      data: categories
+    });
   } catch (error) {
-
     res.status(500).json({
-      message: error
-    })
+      success: false,
+      error: '获取分类列表失败'
+    });
   }
-}
+};
 
+// 创建分类
 export const createCategory = async (req: Request, res: Response) => {
   try {
-    const { categoryName } = req.body;
+    const { categoryName, description, parentId, subCategoryName } = req.body;
+
     const category = await prisma.category.create({
-      data: { categoryName }
-    })
-    res.status(200).json({
-      message: '操作成功',
       data: {
-        id: category.id
+        categoryName,
+        description,
+        parentId: parentId ? Number(parentId) : null,
+        subCategoryName
       }
-    })
+    });
+
+    res.json({
+      success: true,
+      data: category
+    });
   } catch (error) {
     res.status(500).json({
-      message: error
-    })
+      success: false,
+      error: '创建分类失败'
+    });
   }
-}
-// 修改类型
+};
 
+// 更新分类
 export const updateCategory = async (req: Request, res: Response) => {
   try {
-    const { id, categoryName } = req.body;
+    const { id } = req.params;
+    const { categoryName, description, parentId, subCategoryName } = req.body;
+
     const category = await prisma.category.update({
-      where: { id },
-      data: { categoryName }
-    })
-    res.status(200).json({
-      message: '操作成功',
+      where: { id: Number(id) },
       data: {
-        id: category.id
+        categoryName,
+        description,
+        parentId: parentId ? Number(parentId) : null,
+        subCategoryName
       }
-    })
+    });
+
+    res.json({
+      success: true,
+      data: category
+    });
   } catch (error) {
     res.status(500).json({
-      message: error
-    })
+      success: false,
+      error: '更新分类失败'
+    });
   }
-}
+};
 
-
-
-// 删除
+// 删除分类
 export const deleteCategory = async (req: Request, res: Response) => {
   try {
-    const { id } = req.body;
-    const category = prisma.category.delete({
+    const { id } = req.params;
+
+    const category = await prisma.category.delete({
       where: { id: Number(id) }
-    })
-    res.status(200).json({
-      message: '操作成功',
-      data: {}
-    })
+    });
+
+    res.json({
+      success: true,
+      data: category
+    });
   } catch (error) {
     res.status(500).json({
-      message: error
-    })
+      success: false,
+      error: '删除分类失败'
+    });
   }
-
-}
+};

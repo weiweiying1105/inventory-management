@@ -76,10 +76,14 @@ export const createSku = async (req: Request, res: Response) => {
       skuList.map((sku: any) =>
         prisma.sku.create({
           data: {
-            productId,
-            price: sku.price,
-            stock: sku.stock,
+            productId: Number(productId),
+            retailPrice: Number(sku.price),      // 修改为 retailPrice
+            wholesalePrice: Number(sku.price),   // 添加 wholesalePrice
+            memberPrice: Number(sku.price),      // 可选：添加会员价
+            stock: Number(sku.stock),
             code: sku.code,
+            packageSize: sku.packageSize,        // 可选：添加包装规格
+            weight: sku.weight,                  // 可选：添加重量
             specValues: {
               connect: sku.specValueIds.map((id: number) => ({ id }))
             }

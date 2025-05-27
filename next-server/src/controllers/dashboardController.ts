@@ -7,10 +7,17 @@ export const getDashboardMetrics = async (req: Request, res: Response): Promise<
   try {
     // 获取最受欢迎的产品
     const popularProducts = await prisma.products.findMany({
-      take: 15,// 限制返回的产品数量
-      orderBy: {
-        stockQuantity: "desc", // 按库存数量降序排序
-      },
+      take: 15,
+      orderBy: [
+        {
+          skus: {
+            _count: 'desc' // Order by total SKU stock instead
+          }
+        }
+      ],
+      include: {
+        skus: true
+      }
     });
     // 获取销售摘要
     const salesSummary = await prisma.salesSummary.findMany({

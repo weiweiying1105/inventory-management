@@ -25,7 +25,7 @@ export const getAllProducts = async (req: Request, res: Response): Promise<void>
 
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const { name, price, rating, image, specs, defaultSku } = req.body;
+    const { name, price, unit, rating, image, specs, defaultSku } = req.body;
 
     if (!name || !defaultSku) {
       return res.status(400).json({
@@ -38,9 +38,18 @@ export const createProduct = async (req: Request, res: Response) => {
       const product = await tx.products.create({
         data: {
           name,
-          price: Number(price),
           rating: rating ? Number(rating) : 0,
-          image: image || ''
+          image: image || '',
+          unit: unit || '件',
+          skus: {
+            create: {
+              retailPrice: Number(price),
+              wholesalePrice: Number(price),
+              memberPrice: Number(price),
+              stock: 100,
+              isDefault: true
+            }
+          }
         }
       });
 
@@ -48,7 +57,9 @@ export const createProduct = async (req: Request, res: Response) => {
       await tx.sku.create({
         data: {
           productId: product.productId,
-          price: Number(defaultSku.price),
+          retailPrice: Number(defaultSku.price),
+          wholesalePrice: Number(defaultSku.price),
+          memberPrice: Number(defaultSku.price),
           stock: Number(defaultSku.stock),
           code: defaultSku.code || `${product.productId}-default`,
           isDefault: true
@@ -133,13 +144,15 @@ export const getProductDetail = async (req: Request, res: Response) => {
 export const createProductSku = async (req: Request, res: Response) => {
   try {
     const { productId, skuList } = req.body;
-
+    // Prisma 的事务（Transaction）功能。保证多个数据库操作全部成功，否则全部回滚。保证数据一致性
     const skus = await prisma.$transaction(
       skuList.map((sku: any) =>
         prisma.sku.create({
           data: {
             productId: Number(productId),
-            price: Number(sku.price),
+            retailPrice: Number(sku.price),
+            wholesalePrice: Number(sku.price),
+            memberPrice: Number(sku.price),
             stock: Number(sku.stock),
             code: sku.code,
             specValues: {
