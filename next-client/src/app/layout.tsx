@@ -5,6 +5,9 @@ import "./globals.css";
 import ThemeRegistry from './ThemeRegistry';
 import '@/app/globals.css'
 import LayoutWrapper from './components/LayoutWrapper';
+import 'antd/dist/reset.css';  // 如果是 Antd v5
+// 或者
+import 'antd/dist/antd.css';   // 如果是 Antd v4
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
