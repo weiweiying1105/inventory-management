@@ -1,7 +1,7 @@
 "use client"
 import Navbar from '@/app/(components)/Navbar';
 import { Sidebar } from '@/app/(components)/Sidebar';
-import StoreProvider,{useAppSelector} from './redux';
+import StoreProvider, { useAppSelector } from './redux';
 import { useEffect } from 'react';
 type Props = {
   children: React.ReactNode;
@@ -14,7 +14,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
   const isDarkMode = useAppSelector((state: any) => state.global.isDarkMode);
   // useEffect 监听isDarkMode的变化,页面一进来就执行
   useEffect(() => {
-    if(isDarkMode) {
+    if (isDarkMode) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.add('light');
@@ -23,10 +23,10 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
   return (
     <div className={`${isDarkMode ? 'dark' : 'light'} flex bg-gray-50 text-gray-900 w-full min-h-screen`}>
       <Sidebar />
-      <main className={`flex flex-col w-full h-full py-7 px-9 bg-gray-200 ${isCollapsed ? 'md:pl-24' : 'md:pl-72'}`}>
-    
-        <Navbar isDarkMode={isDarkMode} isSidebarCollapsed={isCollapsed}/>  
-        {children} 
+      <main className={`flex flex-col w-full h-screen py-7  px-[20px] bg-gray-10 ${isCollapsed ? 'md:pl-24' : 'md:pl-72'}`}>
+
+        <Navbar isDarkMode={isDarkMode} isSidebarCollapsed={isCollapsed} />
+        {children}
       </main>
     </div>
   );

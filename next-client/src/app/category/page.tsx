@@ -71,7 +71,7 @@ const Category = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">产品分类管理</h1>
         <Button variant="contained" onClick={() => setOpen(true)}>
