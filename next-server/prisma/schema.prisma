@@ -10,63 +10,62 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("DATABASE_URL_DEV")
 }
 
 model Users {
-  id Int @id @default(autoincrement())
-  email  String @unique
-  phone  String? @unique
-  ceatedAt DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  phone     String?  @unique
+  ceatedAt  DateTime @default(now())
   updatedAt DateTime @updatedAt
-  password String
-  role String?
+  password  String
+  role      String?
 }
-
 
 model Products {
   productId     Int         @id @default(autoincrement())
-  name          String      // 商品名称
-  categoryId    Int?        // 分类ID
+  name          String // 商品名称
+  categoryId    Int? // 分类ID
   category      Category?   @relation(fields: [categoryId], references: [id])
-  unit          String      // 单位（如：条、kg、100g等）
-  storageMethod String?     // 储存方式（如：冷藏、常温等）
-  description   String?     // 商品描述
-  image         String?     // 商品图片
-  rating        Float?      // 评分
+  unit          String // 单位（如：条、kg、100g等）
+  storageMethod String? // 储存方式（如：冷藏、常温等）
+  description   String? // 商品描述
+  image         String? // 商品图片
+  rating        Float? // 评分
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   skus          Sku[]
   specGroups    SpecGroup[]
   sales         Sales[]
   purchases     Purchases[]
-  isPopular     Boolean?     @default(false)
-  isHot         Boolean?     @default(false)
-  isNew         Boolean?     @default(false)
-  isRecommend   Boolean?     @default(false)
+  isPopular     Boolean?    @default(false)
+  isHot         Boolean?    @default(false)
+  isNew         Boolean?    @default(false)
+  isRecommend   Boolean?    @default(false)
 }
 
 model Sku {
-  id            Int         @id @default(autoincrement())
-  productId     Int
-  product       Products    @relation(fields: [productId], references: [productId])
-  specValues    SpecValue[] // 规格值组合
-  retailPrice   Float       // 零售价
-  wholesalePrice Float      // 批发价
-  memberPrice   Float?      // 会员价
-  weight        Float?      // 重量（如：7.5-8.5kg）
-  packageSize   String?     // 包装规格（如：40g、100g）
-  stock         Int         // 库存
-  code          String?     // SKU编码
-  isDefault     Boolean     @default(false)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id             Int         @id @default(autoincrement())
+  productId      Int
+  product        Products    @relation(fields: [productId], references: [productId])
+  specValues     SpecValue[] // 规格值组合
+  retailPrice    Float // 零售价
+  wholesalePrice Float // 批发价
+  memberPrice    Float? // 会员价
+  weight         Float? // 重量（如：7.5-8.5kg）
+  packageSize    String? // 包装规格（如：40g、100g）
+  stock          Int // 库存
+  code           String? // SKU编码
+  isDefault      Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 }
 
 // 规格选项组（如颜色、尺寸等）
 model SpecGroup {
   id        Int         @id @default(autoincrement())
-  name      String      // 规格组名称，如"颜色"
+  name      String // 规格组名称，如"颜色"
   productId Int
   product   Products    @relation(fields: [productId], references: [productId])
   values    SpecValue[] // 规格值，如"红色"、"蓝色"
@@ -74,25 +73,25 @@ model SpecGroup {
 
 // 规格值
 model SpecValue {
-  id          Int       @id @default(autoincrement())
-  value       String    // 具体的规格值
-  groupId     Int
-  group       SpecGroup @relation(fields: [groupId], references: [id])
-  skus        Sku[]     // 关联的SKU
+  id      Int       @id @default(autoincrement())
+  value   String // 具体的规格值
+  groupId Int
+  group   SpecGroup @relation(fields: [groupId], references: [id])
+  skus    Sku[] // 关联的SKU
 }
-
 
 // 产品分类
 model Category {
-  id              Int         @id @default(autoincrement())
+  id              Int        @id @default(autoincrement())
   categoryName    String
   subCategoryName String?
   description     String?
   parentId        Int?
-  parent          Category?   @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  subCategory     Category[]  @relation("CategoryHierarchy")
+  parent          Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  subCategory     Category[] @relation("CategoryHierarchy")
   products        Products[]
 }
+
 model Sales {
   id          Int      @id @default(autoincrement())
   saleId      String   @unique
@@ -105,14 +104,14 @@ model Sales {
 }
 
 model Purchases {
-  id          Int      @id @default(autoincrement())
-  purchaseId  String   @unique
-  productId   Int
-  timestamp   DateTime
-  quantity    Int
-  unitCost    Float
-  totalCost   Float
-  product     Products @relation(fields: [productId], references: [productId]) // 更新引用
+  id         Int      @id @default(autoincrement())
+  purchaseId String   @unique
+  productId  Int
+  timestamp  DateTime
+  quantity   Int
+  unitCost   Float
+  totalCost  Float
+  product    Products @relation(fields: [productId], references: [productId]) // 更新引用
 }
 
 model Expenses {
@@ -153,26 +152,25 @@ model ExpenseByCategory {
 }
 
 model Pictures {
-  id Int @id @default(autoincrement())
-  url String
-  name String?
+  id        Int      @id @default(autoincrement())
+  url       String
+  name      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-
 model Customers {
-  id Int @id @default(autoincrement())
-  openid String @unique
-  session_key String? 
-  phone  String? @unique
-  avatarUrl String?
-  nickName String?
-  gender Int?
-  country     String?  // 国家
-  province    String?  // 省份
-  city        String?  // 城市
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          Int      @id @default(autoincrement())
+  openid      String   @unique
+  session_key String?
+  phone       String?  @unique
+  avatarUrl   String?
+  nickName    String?
+  gender      Int?
+  country     String? // 国家
+  province    String? // 省份
+  city        String? // 城市
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   lastLoginAt DateTime @default(now()) // 最后登录时间
 }

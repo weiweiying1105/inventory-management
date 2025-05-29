@@ -87,11 +87,11 @@ export const api = createApi({
     }),
 
     // 删除产品分类
-    deleteCategory: build.mutation<Category, {id:number}>({
+    deleteCategory: build.mutation<Category, { id: number }>({
       query: (category) => ({
         url: '/category/delete',
         method: 'DELETE',
-        body: {id}
+        body: { id }
       }),
       invalidatesTags: ["Categories"]
     }),
@@ -120,7 +120,7 @@ export const api = createApi({
     //登录 <返回值类型，入参类型>
     login: build.mutation<{ token: string }, { email: string, password: string }>({
       query: ({ email, password }) => ({
-        url: '/login',
+        url: '/auth/login',
         method: 'POST',
         body: { email, password },
       }),

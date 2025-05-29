@@ -76,7 +76,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       }
     });
   } catch (error) {
-    res.status(500).json({ message: '注册错误' });
+    res.status(500).json({ message: error });
   }
 }
 

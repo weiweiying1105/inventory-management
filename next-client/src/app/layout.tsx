@@ -1,13 +1,16 @@
 
+"use client"
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ThemeRegistry from './ThemeRegistry';
 import '@/app/globals.css'
-import LayoutWrapper from './components/LayoutWrapper';
+import { usePathname } from "next/navigation";
 import 'antd/dist/reset.css';  // 如果是 Antd v5
-// 或者
-// import 'antd/dist/antd.css';   // 如果是 Antd v4
+import StoreProvider from "./redux";
+import LayoutWrapper from "./components/LayoutWrapper";
+
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,19 +22,21 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "InventoryManagement",
-  description: "InventoryManagement website",
-};
+
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathName = usePathname()
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html lang="en" >
+      <body style={{
+        backgroundImage: pathName === '/login' ? 'url(/login_bg.jpg)' : 'none',
+        backgroundSize: '100% 100%',
+        backgroundRepeat: 'no-repeat'
+      }} className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeRegistry>
           <LayoutWrapper>{children}</LayoutWrapper>
         </ThemeRegistry>

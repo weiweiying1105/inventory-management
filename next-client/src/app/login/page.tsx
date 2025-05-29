@@ -35,6 +35,7 @@ const LoginPage = () => {
       const result = await login(formData).unwrap();
       if (result.token) {
         localStorage.setItem('token', result.token);
+        document.cookie = `token=${result.token}; path=/; max-age=86400`; // 设置 cookie 有效期为 1 天
         router.push('/dashboard');
       }
     } catch (err) {
