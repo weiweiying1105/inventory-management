@@ -1,3 +1,4 @@
+import { updateCategory } from './../../../../next-server/src/controllers/categoryController';
 
 
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
@@ -76,6 +77,24 @@ export const api = createApi({
       }),
       invalidatesTags: ["Categories"]
     }),
+    // 修改产品分类
+    updateCategory: build.mutation<Category, Category>({
+      query: (category) => ({
+        url: '/category/update',
+        method: 'PUT',
+        body: category
+      }),
+    }),
+
+    // 删除产品分类
+    deleteCategory: build.mutation<Category, { id: number }>({
+      query: (category) => ({
+        url: '/category/delete',
+        method: 'DELETE',
+        body: { id }
+      }),
+      invalidatesTags: ["Categories"]
+    }),
 
     // 获取图片分页<返回值类型，入参类型>
     getImagePage: build.query<{ list: Image[] }, { page: number, size: number }>({
@@ -110,7 +129,7 @@ export const api = createApi({
   }),
 })
 // build.query的泛型，第一个为返回类型，第二个为查询参数类型
-export const { useLoginMutation, useSavePictureMutation, useGetImagePageQuery, useGetDashboardMetricsQuery, useGetExpensesByCategoryQuery, useGetProductsQuery, useCreateProductMutation, useGetUsersQuery, useGetCategoriesQuery, useCreateCategoryMutation, useUploadImageMutation } = api;
+export const { useUpdateCategoryMutation, useDeleteCategoryMutation, useLoginMutation, useSavePictureMutation, useGetImagePageQuery, useGetDashboardMetricsQuery, useGetExpensesByCategoryQuery, useGetProductsQuery, useCreateProductMutation, useGetUsersQuery, useGetCategoriesQuery, useCreateCategoryMutation, useUploadImageMutation } = api;
 
 /**
  * 约定俗成的命名规则

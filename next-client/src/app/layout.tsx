@@ -1,11 +1,16 @@
+
 "use client"
-import { Providers } from './providers'
-import { usePathname } from 'next/navigation';
+import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ThemeRegistry from './ThemeRegistry';
 import '@/app/globals.css'
-import LayoutWrapper from './components/LayoutWrapper';
+import { usePathname } from "next/navigation";
+import 'antd/dist/reset.css';  // 如果是 Antd v5
+import StoreProvider from "./redux";
+import LayoutWrapper from "./components/LayoutWrapper";
+
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,11 +29,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const isLoginPage = usePathname() === '/login';
+  const pathName = usePathname()
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased ${isLoginPage?'bg-[url("/login_bg.jpg")] bg-cover bg-center bg-no-repeat':''}` }>
-        <Providers>
+    <html lang="en" >
+      <body style={{
+        backgroundImage: pathName === '/login' ? 'url(/login_bg.jpg)' : 'none',
+        backgroundSize: '100% 100%',
+        backgroundRepeat: 'no-repeat'
+      }} className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeRegistry>
           <LayoutWrapper>{children}</LayoutWrapper>
         </ThemeRegistry>
