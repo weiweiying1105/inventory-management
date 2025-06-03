@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import { uploadToOSS } from "../utils/multerConfig";
 const prisma = new PrismaClient()
 
 
@@ -24,14 +25,18 @@ export const getAllProducts = async (req: Request, res: Response): Promise<void>
 
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const { name, price, rating, stockQuantity, image } = req.body;
+    const { name, price, rating, stockQuantity } = req.body;
+    let imageUrl = '';
+    if (req.file) {
+      imageUrl = await uploadToOSS(req.file);
+    }
     const product = await prisma.products.create({
       data: {
         name: name,
         price: price,
         rating: rating,
         stockQuantity: stockQuantity,
-        image: image || '' // Add the required image field
+        image: imageUrl// Add the required image field
       }
     })
     res.json(product)
