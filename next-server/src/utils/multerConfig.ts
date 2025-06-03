@@ -6,7 +6,7 @@
  * @Description: In User Settings Edit
  * @FilePath: \next-server\src\utils\multerConfig.ts
  */
-import multer from 'multer';
+import multer from 'multer'; // 导入multer
 import { ossConfig } from '../config/ossConfig';
 
 // 配置内存存储，因为我们会直接上传到OSS，所以不需要保存到本地
@@ -34,22 +34,22 @@ export const uploadToOSS = async (file: Express.Multer.File): Promise<string> =>
     // 生成唯一的文件名，避免文件名冲突
     const ext = file.originalname.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    
+
     // 指定上传目录
     const objectName = `products/${fileName}`;
-    
+
     const result = await ossConfig.put(objectName, file.buffer);
-    
+
     if (!result.url) {
       throw new Error('OSS返回的URL为空');
     }
-    
+
     return result.url;
   } catch (error) {
     console.error('OSS上传详细错误:', error);
     throw new Error(
-      error instanceof Error 
-        ? `上传到OSS失败: ${error.message}` 
+      error instanceof Error
+        ? `上传到OSS失败: ${error.message}`
         : '上传到OSS失败: 未知错误'
     );
   }

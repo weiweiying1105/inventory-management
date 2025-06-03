@@ -11,7 +11,6 @@ import StoreProvider from "./redux";
 import LayoutWrapper from "./components/LayoutWrapper";
 
 
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -37,10 +36,11 @@ export default function RootLayout({
         backgroundSize: '100% 100%',
         backgroundRepeat: 'no-repeat'
       }} className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ThemeRegistry>
-          <LayoutWrapper>{children}</LayoutWrapper>
-        </ThemeRegistry>
-        </Providers>
+        <StoreProvider>
+          <ThemeRegistry>
+            <LayoutWrapper>{children}</LayoutWrapper>
+          </ThemeRegistry>
+        </StoreProvider>
       </body>
     </html>
   );

@@ -1,45 +1,57 @@
 
-"use client"
+'use client'
+
 import { useState } from 'react'
-// import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid'
-// import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '@mui/material'
 import { useGetCategoriesQuery, useCreateCategoryMutation, useUpdateCategoryMutation, useDeleteCategoryMutation } from '../state/api'
-import { Edit, Delete } from '@mui/icons-material'
 import { ICategory } from "@/types/category"
-import { Table, Button, Modal, Form, Input, Select, message } from 'antd';
+import { Table, Drawer, Button, Form, Input, Select, message } from 'antd';
+
 const Category = () => {
-   const [form] = Form.useForm();
+  const [form] = Form.useForm();
   const [open, setOpen] = useState(false)
-  const [categoryName, setCategoryName] = useState('')
   const [editId, setEditId] = useState<number | null>(null)
+  
   const { data: categories, isLoading } = useGetCategoriesQuery("")
   const list = categories?.list || []
+  
   const [createCategory] = useCreateCategoryMutation()
   const [updateCategory] = useUpdateCategoryMutation()
   const [deleteCategory] = useDeleteCategoryMutation()
 
-  const handleEdit = (row: any) => {
-    setEditId(row.id)
-    setCategoryName(row.categoryName)
+  const handleSubmit = async (values: any) => {
+    try {
+      if (editId) {
+        await updateCategory({ id: editId, ...values })
+        message.success('分类更新成功')
+      } else {
+        await createCategory(values)
+        message.success('分类创建成功')
+      }
+      setOpen(false)
+      form.resetFields()
+      setEditId(null)
+    } catch (error) {
+      message.error(editId ? '更新失败' : '创建失败')
+    }
+  }
+
+  const handleEdit = (record: ICategory) => {
+    setEditId(record.id)
+    form.setFieldsValue({
+      categoryName: record.categoryName,
+      description: record.description,
+      parentId: record.parentId,
+      subCategoryName: record.subCategoryName
+    })
     setOpen(true)
   }
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('确定要删除这个分类吗？')) {
+    try {
       await deleteCategory({ id })
-    }
-  }
-
-  const handleCreate = async () => {
-    if (categoryName.trim()) {
-      if (editId) {
-        await updateCategory({ id: editId, categoryName })
-      } else {
-        await createCategory({ categoryName })
-      }
-      setCategoryName('')
-      setEditId(null)
-      setOpen(false)
+      message.success('删除成功')
+    } catch (error) {
+      message.error('删除失败')
     }
   }
 
@@ -67,120 +79,96 @@ const Category = () => {
     {
       title: '操作',
       key: 'action',
-      render: (record: ICategory) => (
-        <Button type="link" onClick={() => handleDelete(record.id)}>删除</Button>
+      render: (_, record: ICategory) => (
+        <div className="space-x-2">
+          <Button type="link" onClick={() => handleEdit(record)}>编辑</Button>
+          <Button type="link" danger onClick={() => handleDelete(record.id)}>删除</Button>
+        </div>
       )
     }
   ];
 
-  const handleClose = () => {
-    setOpen(false)
-    setEditId(null)
-    setCategoryName('')
-  }
-
   return (
-    <div className="">
+    <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">产品分类管理</h1>
-        <Button variant="contained" onClick={() => setOpen(true)}>
+        <Button onClick={() => setOpen(true)} type='primary'>
           新增分类
         </Button>
       </div>
 
-      <div style={{ height: 400, width: '100%' }}>
-        <Form form={form} onFinish={handleSubmit} layout="vertical">
-        <Form.Item name="name" label="商品名称" rules={[{ required: true }]}>
-          <Input />
-        </Form.Item>
+      <Table 
+        columns={columns} 
+        dataSource={list}
+        loading={isLoading}
+        rowKey="id"
+        expandable={{
+          childrenColumnName: 'subCategory'
+        }}
+      />
 
-        <Form.Item name="categoryId" label="商品分类">
-          <Select allowClear>
-            {categories.map(cat => (
-              <Select.Option key={cat.id} value={cat.id}>
-                {cat.categoryName}
-              </Select.Option>
-            ))}
-          </Select>
-        </Form.Item>
-
-        <Form.Item name="unit" label="单位" rules={[{ required: true }]}>
-          <Input placeholder="如：件、kg、个" />
-        </Form.Item>
-
-        <Form.Item name="storageMethod" label="储存方式">
-          <Select>
-            <Select.Option value="常温">常温</Select.Option>
-            <Select.Option value="冷藏">冷藏</Select.Option>
-            <Select.Option value="冷冻">冷冻</Select.Option>
-          </Select>
-        </Form.Item>
-
-        <Form.Item name="price" label="价格" rules={[{ required: true }]}>
-          <InputNumber min={0} step={0.01} />
-        </Form.Item>
-
-        <Form.Item name="stock" label="库存" rules={[{ required: true }]}>
-          <InputNumber min={0} />
-        </Form.Item>
-
-        <Form.Item name="description" label="商品描述">
-          <Input.TextArea />
-        </Form.Item>
-
-        <Form.Item label="商品图片">
-          <Upload {...uploadProps} listType="picture-card">
-            <div>
-              <PlusOutlined />
-              <div style={{ marginTop: 8 }}>上传</div>
-            </div>
-          </Upload>
-        </Form.Item>
-
-        <Form.Item>
-          <Button type="primary" htmlType="submit">创建商品</Button>
-        </Form.Item>
-      </Form>
-      </div>
-
-      <Modal
-        title="新建分类"
+      <Drawer
+        title={editId ? "编辑分类" : "新增分类"}
+        placement="right"
+        onClose={() => {
+          setOpen(false)
+          setEditId(null)
+          form.resetFields()
+        }}
         open={open}
-        onCancel={() => handleClose()}
-        footer={null}
+        width={400}
       >
-        <Form form={form} onFinish={handleCreate} layout="vertical">
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+        >
           <Form.Item
             name="categoryName"
             label="分类名称"
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: '请输入分类名称' }]}
           >
-            <Input />
+            <Input placeholder="请输入分类名称" />
           </Form.Item>
 
-          <Form.Item name="subCategoryName" label="子分类名称">
-            <Input />
+          <Form.Item
+            name="description"
+            label="描述"
+          >
+            <Input.TextArea placeholder="请输入分类描述" />
           </Form.Item>
 
-          <Form.Item name="parentId" label="父分类">
-            <Select allowClear>
-              {list.map(cat => (
-                <Select.Option key={cat.id} value={cat.id}>
-                  {cat.categoryName}
+          <Form.Item
+            name="parentId"
+            label="父级分类"
+          >
+            <Select
+              allowClear
+              placeholder="请选择父级分类"
+            >
+              {list.map((category: ICategory) => (
+                <Select.Option key={category.id} value={category.id}>
+                  {category.categoryName}
                 </Select.Option>
               ))}
             </Select>
           </Form.Item>
 
-          <Form.Item name="description" label="描述">
-            <Input.TextArea />
+          <Form.Item
+            name="subCategoryName"
+            label="子分类名称"
+          >
+            <Input placeholder="请输入子分类名称" />
           </Form.Item>
 
-          <Form.Item>
-            <Button type="primary" htmlType="submit">确定</Button>
-          </Form.Item>
+          <div className="flex justify-end space-x-4">
+            <Button onClick={() => setOpen(false)}>取消</Button>
+            <Button type="primary" htmlType="submit">
+              {editId ? '更新' : '创建'}
+            </Button>
+          </div>
         </Form>
-      </Modal>
+      </Drawer>
     </div>
   )
 }
