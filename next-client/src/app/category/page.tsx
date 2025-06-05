@@ -10,10 +10,10 @@ const Category = () => {
   const [form] = Form.useForm();
   const [open, setOpen] = useState(false)
   const [editId, setEditId] = useState<number | null>(null)
-  
+
   const { data: categories, isLoading } = useGetCategoriesQuery("")
-  const list = categories?.list || []
-  
+  const list = categories?.data || []
+
   const [createCategory] = useCreateCategoryMutation()
   const [updateCategory] = useUpdateCategoryMutation()
   const [deleteCategory] = useDeleteCategoryMutation()
@@ -97,8 +97,8 @@ const Category = () => {
         </Button>
       </div>
 
-      <Table 
-        columns={columns} 
+      <Table
+        columns={columns}
         dataSource={list}
         loading={isLoading}
         rowKey="id"

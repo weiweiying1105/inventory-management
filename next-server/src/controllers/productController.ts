@@ -3,33 +3,81 @@ import { PrismaClient } from "@prisma/client";
 import { uploadToOSS } from "../utils/multerConfig";
 const prisma = new PrismaClient()
 
-
 export const getAllProducts = async (req: Request, res: Response): Promise<void> => {
   try {
     const search = req.query.search?.toString() || ""
-    const products = await prisma.products.findMany({
-      where: {
-        name: {
-          contains: search
+    const isHot = req.query.isHot === 'true'
+    const isPopular = req.query.isPopular === 'true'
+    const isNew = req.query.isNew === 'true'
+    const isRecommend = req.query.isRecommend === 'true'
+    const page = Number(req.query.page) || 1
+    const pageSize = Number(req.query.pageSize) || 10
+    const skip = (page - 1) * pageSize
+
+    const where = {
+      name: { contains: search },
+      ...(isHot && { isHot: true }),
+      ...(isPopular && { isPopular: true }),
+      ...(isNew && { isNew: true }),
+      ...(isRecommend && { isRecommend: true })
+    }
+
+    const [products, total] = await Promise.all([
+      prisma.products.findMany({
+        where,
+        skip,
+        take: pageSize,
+        include: {
+          category: true,
+          skus: {
+            where: { isDefault: true }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.products.count({ where })
+    ])
+
+    res.json({
+      success: true,
+      data: {
+        list: products,
+        pagination: {
+          total,
+          page,
+          pageSize,
+          totalPages: Math.ceil(total / pageSize)
         }
       }
     })
-    res.json([
-      ...products
-    ])
-
   } catch (error) {
-    res.status(500).json({ error: "get product  Error" })
+    res.status(500).json({
+      success: false,
+      error: "获取商品列表失败"
+    })
   }
 }
 
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const { name, price, unit, rating, image, specs, defaultSku } = req.body;
+    const {
+      name,
+      categoryId,
+      storageMethod,
+      description,
+      image,
+      rating,
+      isHot,
+      isPopular,
+      isNew,
+      isRecommend,
+      defaultSku
+    } = req.body;
 
     if (!name || !defaultSku) {
       return res.status(400).json({
-        error: '产品名称和默认SKU为必填项'
+        success: false,
+        error: '商品名称和默认SKU为必填项'
       });
     }
 
@@ -38,68 +86,31 @@ export const createProduct = async (req: Request, res: Response) => {
       const product = await tx.products.create({
         data: {
           name,
-          rating: rating ? Number(rating) : 0,
+          categoryId: categoryId ? Number(categoryId) : null,
+          storageMethod,
+          description,
           image: image || '',
-          unit: unit || '件',
-          skus: {
-            create: {
-              retailPrice: Number(price),
-              wholesalePrice: Number(price),
-              memberPrice: Number(price),
-              stock: 100,
-              isDefault: true
-            }
-          }
+          rating: rating ? Number(rating) : 0,
+          isHot: isHot || false,
+          isPopular: isPopular || false,
+          isNew: isNew || false,
+          isRecommend: isRecommend || false,
         }
       });
-
-      // 创建默认SKU
-      await tx.sku.create({
-        data: {
-          productId: product.productId,
-          retailPrice: Number(defaultSku.price),
-          wholesalePrice: Number(defaultSku.price),
-          memberPrice: Number(defaultSku.price),
-          stock: Number(defaultSku.stock),
-          code: defaultSku.code || `${product.productId}-default`,
-          isDefault: true
-        }
-      });
-
-      // 如果有规格信息，创建规格组和规格值
-      if (specs?.groups) {
-        await Promise.all(
-          specs.groups.map(async (group: any) => {
-            await tx.specGroup.create({
-              data: {
-                name: group.name,
-                productId: product.productId,
-                values: {
-                  create: group.values.map((value: string) => ({
-                    value: value
-                  }))
-                }
-              }
-            });
-          })
-        );
-      }
-
       return product;
     });
 
-    res.status(200).json({
+    res.json({
       success: true,
       data: result
     });
   } catch (error) {
-    console.error('创建产品错误:', error);
     res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : '创建产品失败'
+      error: '创建商品失败'
     });
   }
-}
+};
 
 // 获取产品详情（包含规格信息）
 export const getProductDetail = async (req: Request, res: Response) => {
@@ -193,6 +204,34 @@ export const updateSkuStock = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: '更新库存失败'
+    });
+  }
+}
+
+// 更新商品状态（热门、新品、推荐等）
+export const updateProductStatus = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { isHot, isPopular, isNew, isRecommend } = req.body;
+
+    const product = await prisma.products.update({
+      where: { productId: Number(id) },
+      data: {
+        isHot: isHot !== undefined ? isHot : undefined,
+        isPopular: isPopular !== undefined ? isPopular : undefined,
+        isNew: isNew !== undefined ? isNew : undefined,
+        isRecommend: isRecommend !== undefined ? isRecommend : undefined,
+      }
+    });
+
+    res.json({
+      success: true,
+      data: product
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: '更新商品状态失败'
     });
   }
 }

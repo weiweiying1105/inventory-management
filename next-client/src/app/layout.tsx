@@ -29,13 +29,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathName = usePathname()
+
   return (
-    <html lang="en" >
+    <html lang="en">
       <body style={{
         backgroundImage: pathName === '/login' ? 'url(/login_bg.jpg)' : 'none',
         backgroundSize: '100% 100%',
         backgroundRepeat: 'no-repeat'
-      }} className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      }} className="antialiased">
         <StoreProvider>
           <ThemeRegistry>
             <LayoutWrapper>{children}</LayoutWrapper>

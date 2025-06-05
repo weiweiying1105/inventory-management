@@ -28,7 +28,6 @@ model Products {
   name          String // 商品名称
   categoryId    Int? // 分类ID
   category      Category?   @relation(fields: [categoryId], references: [id])
-  unit          String // 单位（如：条、kg、100g等）
   storageMethod String? // 储存方式（如：冷藏、常温等）
   description   String? // 商品描述
   image         String? // 商品图片
@@ -50,6 +49,7 @@ model Sku {
   productId      Int
   product        Products    @relation(fields: [productId], references: [productId])
   specValues     SpecValue[] // 规格值组合
+  unit          String // 单位（如：条、kg、100g等）
   retailPrice    Float // 零售价
   wholesalePrice Float // 批发价
   memberPrice    Float? // 会员价
@@ -173,4 +173,15 @@ model Customers {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   lastLoginAt DateTime @default(now()) // 最后登录时间
+}
+
+model Banner {
+  id        Int      @id @default(autoincrement())
+  title     String?
+  image     String
+  link      String?
+  sort      Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

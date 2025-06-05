@@ -62,30 +62,22 @@ export const createSku = async (req: Request, res: Response) => {
   try {
     const { productId, skuList } = req.body;
 
-    // skuList 格式示例：
-    // [
-    //   {
-    //     specValueIds: [1, 2], // 规格值ID组合
-    //     price: 99.99,
-    //     stock: 100,
-    //     code: "SKU001"
-    //   }
-    // ]
-
     const skus = await prisma.$transaction(
       skuList.map((sku: any) =>
         prisma.sku.create({
           data: {
             productId: Number(productId),
-            retailPrice: Number(sku.price),      // 修改为 retailPrice
-            wholesalePrice: Number(sku.price),   // 添加 wholesalePrice
-            memberPrice: Number(sku.price),      // 可选：添加会员价
+            unit: sku.unit,           // 添加单位字段
+            retailPrice: Number(sku.retailPrice),
+            wholesalePrice: Number(sku.wholesalePrice),
+            memberPrice: Number(sku.memberPrice),
             stock: Number(sku.stock),
             code: sku.code,
-            packageSize: sku.packageSize,        // 可选：添加包装规格
-            weight: sku.weight,                  // 可选：添加重量
+            packageSize: sku.packageSize,
+            weight: sku.weight,
+            isDefault: sku.isDefault || false,
             specValues: {
-              connect: sku.specValueIds.map((id: number) => ({ id }))
+              connect: sku.specValueIds?.map((id: number) => ({ id })) || []
             }
           }
         })

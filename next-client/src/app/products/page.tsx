@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { PlusCircleIcon, SearchIcon } from "lucide-react";
 import Header from "@/app/(components)/Header";
 import Rating from "@/app/(components)/Rating";
-import CreateProductModal from "./CreateProductModal";
+import CreateProductDrawer from "./CreateProductDrawer";
 import Image from "next/image";
 import { NewProduct, Product } from '@/types/product'
 import { Button } from '@mui/material';
@@ -14,11 +14,11 @@ const Products = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const {
-    data: products,
+    data,
     isLoading,
     isError,
   } = useGetProductsQuery(searchTerm);
-
+  const products = data?.data?.list;
   const [createProduct] = useCreateProductMutation();
   const handleCreateProduct = async (productData: NewProduct) => {
     for (const key in productData) {
@@ -112,7 +112,7 @@ const Products = () => {
       </div>
 
       {/* MODAL */}
-      <CreateProductModal
+      <CreateProductDrawer
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onCreate={handleCreateProduct}

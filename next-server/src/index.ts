@@ -1,12 +1,6 @@
-/*
- * @Author: your name
- * @Date: 2025-03-03 17:32:15
- * @LastEditTime: 2025-03-03 17:40:26
- * @LastEditors: 韦玮莹
- * @Description: In User Settings Edit
- * @FilePath: \next-server\src\index.ts
- */
 import express from 'express';
+import swaggerUi from 'swagger-ui-express';
+import swaggerJsdoc from 'swagger-jsdoc';
 import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
 import cors from 'cors';
@@ -23,8 +17,28 @@ import uploadRouter from './routes/upload';
 import PictureRouter from './routes/pictureRoute'
 import AuthRouter from './routes/authRoute'
 //------------------------------------------------ 配置
+
+// mini路由
+import minihome from './routes/mini/homeRoute'
+
 dotenv.config()
 const app = express();
+
+const options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'inventory-management',
+      description: '商城后管',
+      version: '1.0.0',
+    },
+  },
+  // 这里指定你的路由文件位置
+  apis: ['./src/routes/*.ts'],
+};
+
+const swaggerSpec = swaggerJsdoc(options);
+
 app.use(express.json());
 // helmet 是一个用于设置 HTTP 头的中间件，可以防止一些常见的 Web 攻击，如跨站脚本攻击（XSS）和跨站请求伪造（CSRF）。
 app.use(helmet());
@@ -52,8 +66,12 @@ app.use('/upload', uploadRouter)
 app.use('/picture', PictureRouter)
 app.use('/auth', AuthRouter)
 // ------------------------------------------------ server
+// 小程序
+app.use('/mini', minihome)
 const port = Number(process.env.PORT) || 3001;
 // 需要添加0.0.0.0来代表监听所有可用的网络接口，而不仅仅是 localhost。
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.listen(port, "0.0.0.0", () => {
   console.log(`Server is running on port ${port}`);
-})
+  console.log(`Swagger UI available at http://localhost:${port}/api-docs`);
+});
