@@ -21,7 +21,7 @@ ADD COLUMN     "unit" TEXT NOT NULL;
 -- AlterTable
 ALTER TABLE "Sku" DROP COLUMN "price",
 ADD COLUMN     "memberPrice" DOUBLE PRECISION,
-ADD COLUMN     "packageSize" TEXT,
+ADD COLUMN     "dimensions" TEXT,
 ADD COLUMN     "retailPrice" DOUBLE PRECISION NOT NULL,
 ADD COLUMN     "weight" DOUBLE PRECISION,
 ADD COLUMN     "wholesalePrice" DOUBLE PRECISION NOT NULL;

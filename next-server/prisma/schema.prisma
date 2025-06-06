@@ -49,12 +49,12 @@ model Sku {
   productId      Int
   product        Products    @relation(fields: [productId], references: [productId])
   specValues     SpecValue[] // 规格值组合
-  unit          String // 单位（如：条、kg、100g等）
+  unit           String // 单位（如：条、kg、100g等）
   retailPrice    Float // 零售价
   wholesalePrice Float // 批发价
   memberPrice    Float? // 会员价
   weight         Float? // 重量（如：7.5-8.5kg）
-  packageSize    String? // 包装规格（如：40g、100g）
+  dimensions     String? // 包装规格（如：40g、100g）
   stock          Int // 库存
   code           String? // SKU编码
   isDefault      Boolean     @default(false)

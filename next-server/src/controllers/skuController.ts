@@ -73,7 +73,7 @@ export const createSku = async (req: Request, res: Response) => {
             memberPrice: Number(sku.memberPrice),
             stock: Number(sku.stock),
             code: sku.code,
-            packageSize: sku.packageSize,
+            dimensions: sku.dimensions,
             weight: sku.weight,
             isDefault: sku.isDefault || false,
             specValues: {

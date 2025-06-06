@@ -8,10 +8,9 @@ import CreateProductDrawer from "./CreateProductDrawer";
 import Image from "next/image";
 import { NewProduct, Product } from '@/types/product'
 import { Button } from '@mui/material';
-
+import Link from 'next/link'
 const Products = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const {
     data,
@@ -19,16 +18,6 @@ const Products = () => {
     isError,
   } = useGetProductsQuery(searchTerm);
   const products = data?.data?.list;
-  const [createProduct] = useCreateProductMutation();
-  const handleCreateProduct = async (productData: NewProduct) => {
-    for (const key in productData) {
-      if (productData[key as keyof NewProduct] === '') {
-        console.log(key + '为空', productData[key as keyof NewProduct]);
-        return;
-      }
-    }
-    await createProduct(productData);
-  };
 
   if (isLoading) {
     return <div className="py-4">Loading...</div>;
@@ -59,13 +48,10 @@ const Products = () => {
       {/* HEADER BAR */}
       <div className="flex justify-between items-center mb-6">
         <Header name="Products" />
-        <button
-          className="flex items-center bg-blue-500 hover:bg-blue-700 text-gray-200 font-bold py-2 px-4 rounded"
-          onClick={() => setIsModalOpen(true)}
-        >
-          <PlusCircleIcon className="w-5 h-5 mr-2 !text-gray-200" /> Create
-          Product
-        </button>
+        <Link href="/products/add" className="button-style">
+          <PlusCircleIcon className="w-5 h-5 mr-2 !text-gray-200" /> 添加产品
+        </Link>
+
       </div>
 
       {/* BODY PRODUCTS LIST */}
@@ -112,11 +98,11 @@ const Products = () => {
       </div>
 
       {/* MODAL */}
-      <CreateProductDrawer
+      {/* <CreateProductDrawer
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onCreate={handleCreateProduct}
-      />
+      /> */}
     </div>
   );
 }

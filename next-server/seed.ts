@@ -4,6 +4,13 @@ import * as path from 'path'
 
 const prisma = new PrismaClient()
 
+interface SeedProduct {
+  name: string;
+  rating?: number;
+  image?: string;
+  price: number;
+}
+
 async function main() {
   // Read seed data from JSON files
   const productsData = JSON.parse(
@@ -21,46 +28,38 @@ async function main() {
   await prisma.purchases.deleteMany()
   await prisma.products.deleteMany()
 
-  // Seed products first and store their IDs
+  // Seed products and store their IDs
   const productIdMap = new Map();
-  // for (const product of productsData) {
-  //   const createdProduct = await prisma.products.create({
-  //     data: {
-  //       productId: product.productId,
-  //       name: product.name,
-  //       description: product.description,
-  //       rating: product.rating,
-  //       image: product.image
-  //     }
-  //   });
-  //   productIdMap.set(product.productId, createdProduct.productId);
-  // }
+
   for (const product of productsData) {
     await prisma.products.create({
       data: {
         name: product.name,
         rating: product.rating || 0,
         image: product.image || '',
-        unit: '件',
         skus: {
-          create: {
-            retailPrice: product.price,    // 使用 price 创建 SKU
-            wholesalePrice: product.price,
-            memberPrice: product.price,
-            stock: 100,
-            isDefault: true,
-            code: `${product.name}-default`
-          }
+          create: [
+            {
+              retailPrice: product.price,
+              wholesalePrice: product.price,
+              memberPrice: product.price,
+              stock: 100,
+              isDefault: true,
+              code: `${product.name}-default`,
+              unit: '件'
+            }
+          ]
         }
       }
     });
   }
+
   // Seed sales with correct product references
   for (const sale of salesData) {
     await prisma.sales.create({
       data: {
         saleId: sale.saleId,
-        productId: productIdMap.get(sale.productId), // 使用映射的 productId
+        productId: productIdMap.get(sale.productId),
         timestamp: new Date(sale.timestamp),
         quantity: sale.quantity,
         unitPrice: sale.unitPrice,
@@ -80,10 +79,10 @@ async function main() {
         unitCost: purchase.unitCost,
         totalCost: purchase.totalCost
       }
-    })
+    });
   }
 
-  console.log('Database seeding completed')
+  console.log('Database seeding completed');
 }
 
 main()

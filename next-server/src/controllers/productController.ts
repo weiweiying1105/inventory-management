@@ -81,6 +81,7 @@ export const createProduct = async (req: Request, res: Response) => {
       });
     }
 
+    // 在创建 SKU 时添加 unit 字段
     const result = await prisma.$transaction(async (tx) => {
       // 创建产品基本信息
       const product = await tx.products.create({
@@ -95,6 +96,20 @@ export const createProduct = async (req: Request, res: Response) => {
           isPopular: isPopular || false,
           isNew: isNew || false,
           isRecommend: isRecommend || false,
+          skus: {
+            create: {
+              unit: defaultSku.unit, // 添加单位字段
+              retailPrice: Number(defaultSku.retailPrice),
+              wholesalePrice: Number(defaultSku.wholesalePrice),
+              memberPrice: Number(defaultSku.memberPrice),
+              stock: Number(defaultSku.stock),
+              code: defaultSku.code,
+              specValues: {
+                connect: defaultSku.specValueIds?.map((id: number) => ({ id })) || []
+              },
+              isDefault: true
+            }
+          }
         }
       });
       return product;
@@ -166,6 +181,7 @@ export const createProductSku = async (req: Request, res: Response) => {
             memberPrice: Number(sku.price),
             stock: Number(sku.stock),
             code: sku.code,
+            unit: sku.unit,  // 添加必需的 unit 字段
             specValues: {
               connect: sku.specValueIds.map((id: number) => ({ id }))
             }
