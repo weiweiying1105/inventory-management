@@ -4,8 +4,8 @@ const prisma = new PrismaClient()
 interface SeedProduct {
   name: string;
   rating?: number;
-  image?: string;
-  price: number;  // 用于创建 SKU 的价格
+  image?: string[];  // 这里的类型定义是正确的
+  price: number;
 }
 
 async function main() {
@@ -14,7 +14,7 @@ async function main() {
       name: "测试商品1",
       rating: 4.5,
       price: 99.99,
-      image: "https://example.com/image1.jpg"
+      image: ["https://example.com/image1.jpg"]
     }
   ];
 
@@ -23,7 +23,7 @@ async function main() {
       data: {
         name: product.name,
         rating: product.rating || 0,
-        image: product.image || '',
+        images: product.image || [],  // 修改这里：image -> images
         skus: {
           create: {
             retailPrice: product.price,

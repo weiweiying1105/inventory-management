@@ -27,12 +27,25 @@ export const getAllProducts = async (req: Request, res: Response): Promise<void>
         where,
         skip,
         take: pageSize,
-        include: {
-          category: true,
+        select: {
+          productId: true, // 明确返回产品id
+          name: true,
+          images: true,
+          isHot: true,
+          isPopular: true,
+          isNew: true,
+          isRecommend: true,
+          createdAt: true,
+          category: {
+            select: {
+              categoryName: true // 分类名称
+            }
+          },
           skus: {
             where: { isDefault: true }
           }
         },
+
         orderBy: { createdAt: 'desc' }
       }),
       prisma.products.count({ where })
@@ -65,7 +78,7 @@ export const createProduct = async (req: Request, res: Response) => {
       categoryId,
       storageMethod,
       description,
-      image,
+      images,
       rating,
       isHot,
       isPopular,
@@ -74,10 +87,10 @@ export const createProduct = async (req: Request, res: Response) => {
       defaultSku
     } = req.body;
 
-    if (!name || !defaultSku) {
+    if (!name) {
       return res.status(400).json({
         success: false,
-        error: '商品名称和默认SKU为必填项'
+        error: '商品名称为必填项'
       });
     }
 
@@ -90,7 +103,7 @@ export const createProduct = async (req: Request, res: Response) => {
           categoryId: categoryId ? Number(categoryId) : null,
           storageMethod,
           description,
-          image: image || '',
+          images: images || [],  // 修改这里：image -> images，同时确保是数组类型
           rating: rating ? Number(rating) : 0,
           isHot: isHot || false,
           isPopular: isPopular || false,
@@ -127,44 +140,7 @@ export const createProduct = async (req: Request, res: Response) => {
   }
 };
 
-// 获取产品详情（包含规格信息）
-export const getProductDetail = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const product = await prisma.products.findUnique({
-      where: { productId: Number(id) },
-      include: {
-        specGroups: {
-          include: {
-            values: true
-          }
-        },
-        skus: {
-          include: {
-            specValues: true
-          }
-        }
-      }
-    });
 
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        error: '产品不存在'
-      });
-    }
-
-    res.json({
-      success: true,
-      data: product
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: '获取产品详情失败'
-    });
-  }
-}
 
 // 创建商品SKU
 export const createProductSku = async (req: Request, res: Response) => {
@@ -248,6 +224,136 @@ export const updateProductStatus = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: '更新商品状态失败'
+    });
+  }
+}
+// 修改产品信息
+export const updateProductWithSkus = async (req: Request, res: Response) => {
+  try {
+    const {
+      productId,
+      name,
+      categoryId,
+      storageMethod,
+      description,
+      images,
+      rating,
+      isHot,
+      isPopular,
+      isNew,
+      isRecommend,
+      skus // 前端传递的sku数组，包含id（有则为更新，无则为新增）、isDefault等字段
+    } = req.body;
+
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. 更新商品基本信息
+      const product = await tx.products.update({
+        where: { productId: Number(productId) },
+        data: {
+          name,
+          categoryId: categoryId ? Number(categoryId) : null,
+          storageMethod,
+          description,
+          images: images || [],
+          rating: rating ? Number(rating) : 0,
+          isHot: isHot || false,
+          isPopular: isPopular || false,
+          isNew: isNew || false,
+          isRecommend: isRecommend || false,
+        }
+      });
+
+      // 2. 批量处理SKU
+      for (const sku of skus) {
+        if (sku.id) {
+          // 更新已有SKU
+          await tx.sku.update({
+            where: { id: Number(sku.id) },
+            data: {
+              retailPrice: Number(sku.retailPrice),
+              wholesalePrice: Number(sku.wholesalePrice),
+              memberPrice: Number(sku.memberPrice),
+              stock: Number(sku.stock),
+              code: sku.code,
+              unit: sku.unit,
+              isDefault: !!sku.isDefault,
+              specValues: {
+                set: sku.specValueIds?.map((id: number) => ({ id })) || []
+              }
+            }
+          });
+        } else {
+          // 新增SKU
+          await tx.sku.create({
+            data: {
+              productId: Number(productId),
+              retailPrice: Number(sku.retailPrice),
+              wholesalePrice: Number(sku.wholesalePrice),
+              memberPrice: Number(sku.memberPrice),
+              stock: Number(sku.stock),
+              code: sku.code,
+              unit: sku.unit,
+              isDefault: !!sku.isDefault,
+              specValues: {
+                connect: sku.specValueIds?.map((id: number) => ({ id })) || []
+              }
+            }
+          });
+        }
+      }
+      // 3. 可选：删除未在skus中的旧SKU（如需同步删除）
+      const existingSkuIds = skus.filter((s: any) => s.id).map((s: any) => Number(s.id));
+      await tx.sku.deleteMany({ where: { productId: Number(productId), id: { notIn: existingSkuIds } } });
+
+      return product;
+    });
+
+    res.json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: '更新商品及SKU失败'
+    });
+  }
+}
+// ... existing code ...
+export const getProductDetail = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const product = await prisma.products.findUnique({
+      where: { productId: Number(id) },
+      include: {
+        specGroups: {
+          include: {
+            values: true
+          }
+        },
+        skus: {
+          include: {
+            specValues: true
+          }
+        }
+      }
+    });
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        error: '产品不存在'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: product
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: '获取产品详情失败'
     });
   }
 }

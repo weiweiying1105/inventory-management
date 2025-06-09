@@ -1,117 +1,74 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL_DEV")
+  url      = env("DATABASE_URL_PROD")
 }
 
 model Users {
-  id        Int      @id @default(autoincrement())
   email     String   @unique
-  phone     String?  @unique
   ceatedAt  DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
   password  String
+  phone     String?  @unique
   role      String?
+  updatedAt DateTime @updatedAt
 }
-
-model Products {
-  productId     Int         @id @default(autoincrement())
-  name          String // 商品名称
-  categoryId    Int? // 分类ID
-  category      Category?   @relation(fields: [categoryId], references: [id])
-  storageMethod String? // 储存方式（如：冷藏、常温等）
-  description   String? // 商品描述
-  image         String? // 商品图片
-  rating        Float? // 评分
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  skus          Sku[]
-  specGroups    SpecGroup[]
-  sales         Sales[]
-  purchases     Purchases[]
-  isPopular     Boolean?    @default(false)
-  isHot         Boolean?    @default(false)
-  isNew         Boolean?    @default(false)
-  isRecommend   Boolean?    @default(false)
-}
-
-model Sku {
-  id             Int         @id @default(autoincrement())
-  productId      Int
+rice Float
+  unit           String
   product        Products    @relation(fields: [productId], references: [productId])
-  specValues     SpecValue[] // 规格值组合
-  unit           String // 单位（如：条、kg、100g等）
-  retailPrice    Float // 零售价
-  wholesalePrice Float // 批发价
-  memberPrice    Float? // 会员价
-  weight         Float? // 重量（如：7.5-8.5kg）
-  dimensions     String? // 包装规格（如：40g、100g）
-  stock          Int // 库存
-  code           String? // SKU编码
-  isDefault      Boolean     @default(false)
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  specValues     SpecValue[] @relation("SkuToSpecValue")
 }
 
-// 规格选项组（如颜色、尺寸等）
 model SpecGroup {
   id        Int         @id @default(autoincrement())
-  name      String // 规格组名称，如"颜色"
+  name      String
   productId Int
   product   Products    @relation(fields: [productId], references: [productId])
-  values    SpecValue[] // 规格值，如"红色"、"蓝色"
+  values    SpecValue[]
 }
 
-// 规格值
 model SpecValue {
   id      Int       @id @default(autoincrement())
-  value   String // 具体的规格值
+  value   String
   groupId Int
   group   SpecGroup @relation(fields: [groupId], references: [id])
-  skus    Sku[] // 关联的SKU
+  skus    Sku[]     @relation("SkuToSpecValue")
 }
 
-// 产品分类
 model Category {
   id              Int        @id @default(autoincrement())
   categoryName    String
-  subCategoryName String?
   description     String?
   parentId        Int?
+  subCategoryName String?
   parent          Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
   subCategory     Category[] @relation("CategoryHierarchy")
   products        Products[]
 }
 
 model Sales {
-  id          Int      @id @default(autoincrement())
   saleId      String   @unique
-  productId   Int
   timestamp   DateTime
   quantity    Int
   unitPrice   Float
   totalAmount Float
-  product     Products @relation(fields: [productId], references: [productId]) // 更新引用
+  productId   Int
+  id          Int      @id @default(autoincrement())
+  product     Products @relation(fields: [productId], references: [productId])
 }
 
 model Purchases {
-  id         Int      @id @default(autoincrement())
   purchaseId String   @unique
-  productId  Int
   timestamp  DateTime
   quantity   Int
   unitCost   Float
   totalCost  Float
-  product    Products @relation(fields: [productId], references: [productId]) // 更新引用
+  productId  Int
+  id         Int      @id @default(autoincrement())
+  product    Products @relation(fields: [productId], references: [productId])
 }
 
 model Expenses {
@@ -125,7 +82,41 @@ model SalesSummary {
   salesSummaryId   String   @id
   totalValue       Float
   changePercentage Float?
-  date             DateTime
+  date             
+model Products {
+  name          String
+  rating        Float?
+  images        String[]    // Changed from image String? to images String[]
+  productId     Int         @id @default(autoincrement())
+  categoryId    Int?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  description   String?
+  isHot         Boolean?    @default(false)
+  isNew         Boolean?    @default(false)
+  isPopular     Boolean?    @default(false)
+  isRecommend   Boolean?    @default(false)
+  storageMethod String?
+  category      Category?   @relation(fields: [categoryId], references: [id])
+  purchases     Purchases[]
+  sales         Sales[]
+  skus          Sku[]
+  specGroups    SpecGroup[]
+}
+
+model Sku {
+  id             Int         @id @default(autoincrement())
+  productId      Int
+  stock          Int
+  code           String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  isDefault      Boolean     @default(false)
+  memberPrice    Float?
+  dimensions     String?
+  retailPrice    Float
+  weight         Float?
+  wholesalePDateTime
 }
 
 model PurchaseSummary {
@@ -154,25 +145,25 @@ model ExpenseByCategory {
 model Pictures {
   id        Int      @id @default(autoincrement())
   url       String
-  name      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  name      String?
 }
 
 model Customers {
   id          Int      @id @default(autoincrement())
   openid      String   @unique
-  session_key String?
   phone       String?  @unique
   avatarUrl   String?
   nickName    String?
   gender      Int?
-  country     String? // 国家
-  province    String? // 省份
-  city        String? // 城市
+  country     String?
+  province    String?
+  city        String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  lastLoginAt DateTime @default(now()) // 最后登录时间
+  lastLoginAt DateTime @default(now())
+  session_key String?
 }
 
 model Banner {
@@ -181,7 +172,7 @@ model Banner {
   image     String
   link      String?
   sort      Int      @default(0)
-  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  isActive  Boolean  @default(true)
 }

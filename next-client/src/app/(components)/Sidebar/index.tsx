@@ -1,5 +1,6 @@
 "use client"
 import { Menu, LucideIcon, LayoutDashboard, Package, Clipboard, Users, Settings, CircleDollarSign, CircleDollarSignIcon, Image, Handshake } from "lucide-react"
+import { Tooltip } from 'antd'
 import { useAppSelector } from "@/app/redux"
 import { setIsSidebarCollapsed } from "@/app/state"
 import { useAppDispatch } from "@/app/redux"
@@ -74,19 +75,28 @@ const SideBarLink = ({
   label,
   isCollapsed,
 }: SideBarLink) => {
-
   const path = usePathname()
   const isActive = path === href || (path === '/' && href === '/dashboard')
   const linkClass = `flex items-center gap-2 hover:text-blue-500 hover:bg-blue-500/10  transition-colors duration-200 
   ${isCollapsed ? 'justify-center py-4' : 'justify-start px-8 py-4'} 
   ${isActive ? 'bg-blue-500 text-white' : ''}`
 
+  const content = (
+    <div className={linkClass}>
+      <LucideIcon className="w-4 h-4" />
+      <span className={`${isCollapsed ? 'hidden' : ''} font-semibold`}>{label}</span>
+    </div>
+  )
+
   return (
     <Link href={href}>
-      <div className={linkClass}>
-        <LucideIcon className="w-4 h-4" />
-        <span className={`${isCollapsed ? 'hidden' : ''} font-semibold`}>{label}</span>
-      </div>
+      {isCollapsed ? (
+        <Tooltip placement="right" title={label}>
+          {content}
+        </Tooltip>
+      ) : (
+        content
+      )}
     </Link>
   )
 }
@@ -117,9 +127,9 @@ export const Sidebar = () => {
 
 
 
-      <div className="flex-grow mt-8">
+      <div className="flex-grow mt-8" >
         {links.map((link) => (
-          <SideBarLink key={link.href} {...link} isCollapsed={isSidebarCollapsed} />
+          <SideBarLink  key={link.href} {...link} isCollapsed={isSidebarCollapsed} />
         ))}
       </div>
       <div className={`${isSidebarCollapsed ? 'hidden' : ''} mb-10`}>

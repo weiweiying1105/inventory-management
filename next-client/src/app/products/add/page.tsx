@@ -7,11 +7,11 @@
  * @FilePath: \inventory-management\next-client\src\app\products\add\page.tsx
  */
 "use client"
-import React, { ChangeEvent, FormEvent, useState } from "react";
+import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import Header from "@/app/(components)/Header";
 import { NewProduct } from "@/types/product";
 import { useGetImagePageQuery, useGetCategoriesQuery, useCreateProductMutation } from "../../state/api";
-import { Drawer, Modal, Image as AntImage, Select, Button } from "antd";
+import { Drawer, Modal, Image as AntImage, Select, Button ,Pagination,} from "antd";
 import { Image } from "@/types/image";
 
 type CreateProductDrawerProps = {
@@ -19,7 +19,13 @@ type CreateProductDrawerProps = {
 }
 
 const CreateProductDrawer = (props: CreateProductDrawerProps) => {
+  const [imgList, setImgList] = useState<Image[]>([]);
 
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const SIZE =100;
+ const [selectedImages,setSelectImages] = useState<string[]>([]);
+  const [imageList, setImageList] = useState<string[]>([]);
   const { data: categories, isLoading } = useGetCategoriesQuery("");
   const list = categories?.data || [];
   const [formData, setFormData] = useState({
@@ -27,7 +33,7 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
     categoryId: 0,
     storageMethod: '',
     description: '',
-    image: '',
+    images: [],
     rating: 0,
     isPopular: false,
     isHot: false,
@@ -47,15 +53,17 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
   });
 
   // 获取图片列表
-  // const { data: imageData } = useGetImagePageQuery({
-  //   page: 1,
-  //   pageSize: 100
-  // });
+  const { data:imageData } = useGetImagePageQuery({
+    page: 1,
+    size: 100
+  });
+  useEffect(() => {
+    console.log('imageData', imageData?.list);
+    if(imageData?.list){
+      setImageList(imageData?.list);
+    }
+  },[imageData?.list,page])
 
-  // const handleImageSelect = (url: string) => {
-  //   setFormData({ ...formData, image: url });
-  //   setImageModalOpen(false);
-  // }
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -84,7 +92,9 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
         return;
       }
     }
-    await createProduct(productData);
+    // 自动添加 defaultSku 字段
+    const defaultSku = productData.skus.find(sku => sku.isDefault) || productData.skus[0];
+    await createProduct({ ...productData, defaultSku });
   };
 
   const labelCssStyles = "block text-sm font-medium text-gray-700";
@@ -132,11 +142,25 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
     return `${categoryCode}${productCode}${skuVariant}`;
   }
 
+  // 处理图片选择
+  const handleImageSelect = (url: string) => {
+    setFormData({...formData, images: [...(formData.images || []), url] });
+    setImageModalOpen(false);
+  };
+  // 确认图片
+  const handleConfirmImages = () => {
+    setSelectImages(formData.images || []);
+    setImageModalOpen(false);
+  }
+  
 
   return (
     <>
 
-      <form className="mt-5" onSubmit={handleSubmit}>
+      <form className="mt-5"  method="POST" onSubmit={(e) => {
+        e.preventDefault();
+        handleSubmit(formData);
+      }}>
         <label htmlFor="name" className={labelCssStyles}>Product Name</label>
         <input
           type="text"
@@ -200,9 +224,25 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           value={formData.description}
           className={inputCssStyles}
-
         />
-
+      {/* 添加图片选择区域 */}
+      <div className="mt-4">
+        <h3 className="text-lg font-medium mb-2">商品图片</h3>
+        <div className="flex flex-wrap gap-2 mb-2">
+          {formData.images?.map((url, index) => (
+            <div key={index} className="relative w-24 h-24">
+              <AntImage
+                src={url}
+                alt={`商品图片 ${index + 1}`}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ))}
+        </div>
+        <Button type="primary" onClick={() => setImageModalOpen(true)}>
+          选择图片
+        </Button>
+      </div>
         {/* SKU 信息 */}
         <div className="mt-4">
           <div className="flex justify-between items-center mb-4">
@@ -376,6 +416,44 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
 
 
       {/* 图片选择模态框保持不变 */}
+
+      {/* 图片选择模态框 */}
+      <Modal
+        title="选择商品图片"
+        open={imageModalOpen}
+        onCancel={() => setImageModalOpen(false)}
+        onOk={handleConfirmImages}
+        width={800}
+      >
+        <div className="grid grid-cols-4 gap-4">
+          {imageList.map((item) => (
+            <div
+              key={item.url}
+              className={`relative cursor-pointer border-2 ${selectedImages.includes(item.url) ? 'border-blue-500' : 'border-transparent'}`}
+              onClick={() => handleImageSelect(item.url)}
+            >
+              <AntImage
+                src={item.url}
+                alt={item.name}
+                className="w-full h-32 object-cover"
+              />
+              {selectedImages.includes(item.url) && (
+                <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center">
+                  ✓
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 flex justify-center">
+          <Pagination
+            current={page}
+            total={imageData?.total || 0}
+            pageSize={SIZE}
+            onChange={(page) => setPage(page)}
+          />
+        </div>
+      </Modal>
     </>
   );
 };

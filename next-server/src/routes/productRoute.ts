@@ -145,12 +145,14 @@
  */
 
 import { Router } from "express";
-import { getAllProducts, createProduct, updateProductStatus } from '../controllers/productController';
+import { getAllProducts, createProduct, updateProductStatus, updateProductWithSkus, getProductDetail } from '../controllers/productController';
 
 const router = Router();
 
 router.get('/', getAllProducts);
 router.post('/', createProduct);
 router.patch('/:id/status', updateProductStatus);
+router.patch('/update', updateProductWithSkus);
+router.get('/detail', getProductDetail);
 
 export default router;

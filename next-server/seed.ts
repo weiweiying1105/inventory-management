@@ -36,7 +36,7 @@ async function main() {
       data: {
         name: product.name,
         rating: product.rating || 0,
-        image: product.image || '',
+        images: product.image ? [product.image] : [],  // 修改 image 为 images，并确保是数组类型
         skus: {
           create: [
             {
