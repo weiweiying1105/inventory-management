@@ -5,8 +5,6 @@ next-client/node_modules
 next-server/node_modules
 next-client/dist/
 next-server/dist/
-next-client/.env*
-next-server/.env*
 next-client/.next/
 /.pnp
 .pnp.*
