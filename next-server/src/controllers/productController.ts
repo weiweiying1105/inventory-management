@@ -66,7 +66,7 @@ export const getAllProducts = async (req: Request, res: Response): Promise<void>
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: "获取商品列表失败"
+      error: "获取商品列表失败:"+error
     })
   }
 }
@@ -157,7 +157,7 @@ export const createProductSku = async (req: Request, res: Response) => {
             memberPrice: Number(sku.price),
             stock: Number(sku.stock),
             code: sku.code,
-            unit: sku.unit,  // 添加必需的 unit 字段
+             unit: sku.unit, // 添加此行以确保 unit 字段存在
             specValues: {
               connect: sku.specValueIds.map((id: number) => ({ id }))
             }

@@ -193,19 +193,6 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
             </React.Fragment>
           ))}
         </Select>
-
-        {/* 移除多余的分类选择框 */}
-        <label htmlFor="unit" className={labelCssStyles}>Unit</label>
-        <input
-          type="text"
-          name="unit"
-          placeholder="单位"
-          onChange={handleChange}
-          value={formData.unit}
-          className={inputCssStyles}
-          required
-        />
-
         <label htmlFor="storageMethod" className={labelCssStyles}>存储方式</label>
         <input
           type="text"
@@ -216,7 +203,6 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
           className={inputCssStyles}
           required
         />
-
         <label htmlFor="description" className={labelCssStyles}>描述</label>
         <textarea
           name="description"

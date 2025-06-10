@@ -16,11 +16,6 @@ model Users {
   role      String?
   updatedAt DateTime @updatedAt
 }
-rice Float
-  unit           String
-  product        Products    @relation(fields: [productId], references: [productId])
-  specValues     SpecValue[] @relation("SkuToSpecValue")
-}
 
 model SpecGroup {
   id        Int         @id @default(autoincrement())
@@ -82,11 +77,13 @@ model SalesSummary {
   salesSummaryId   String   @id
   totalValue       Float
   changePercentage Float?
-  date             
+  date             DateTime
+}
+
 model Products {
   name          String
   rating        Float?
-  images        String[]    // Changed from image String? to images String[]
+  images        String[] // Changed from image String? to images String[]
   productId     Int         @id @default(autoincrement())
   categoryId    Int?
   createdAt     DateTime    @default(now())
@@ -105,18 +102,22 @@ model Products {
 }
 
 model Sku {
-  id             Int         @id @default(autoincrement())
-  productId      Int
-  stock          Int
-  code           String?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-  isDefault      Boolean     @default(false)
-  memberPrice    Float?
-  dimensions     String?
-  retailPrice    Float
-  weight         Float?
-  wholesalePDateTime
+  id                 Int         @id @default(autoincrement())
+  productId          Int
+  stock              Int
+  code               String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  isDefault          Boolean     @default(false)
+  memberPrice        Float?
+  dimensions         String?
+  retailPrice        Float
+  weight             Float?
+  wholesalePDateTime DateTime?
+  wholesalePrice     Float?
+  unit               String?
+  product            Products    @relation(fields: [productId], references: [productId])
+  specValues         SpecValue[] @relation("SkuToSpecValue")
 }
 
 model PurchaseSummary {
