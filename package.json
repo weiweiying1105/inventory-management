@@ -3,7 +3,7 @@
     "dotenv": "^16.5.0"
   },
   "scripts": {
-    "dev": "concurrently 'npm run dev --prefix next-server' 'npm run dev --prefix next-client'"
+   "dev": "concurrently --raw \"npm run dev --prefix next-server\" \"npm run dev --prefix next-client\"" 
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

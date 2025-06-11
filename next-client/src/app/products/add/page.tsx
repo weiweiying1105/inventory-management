@@ -8,10 +8,12 @@
  */
 "use client"
 import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
-import Header from "@/app/(components)/Header";
+import { useSearchParams } from "next/navigation";
 import { NewProduct } from "@/types/product";
-import { useGetImagePageQuery, useGetCategoriesQuery, useCreateProductMutation } from "../../state/api";
-import { Drawer, Modal, Image as AntImage, Select, Button ,Pagination,} from "antd";
+import { useGetImagePageQuery, useGetCategoriesQuery, useCreateProductMutation, useUpdateProductMutation, useGetProductDetailQuery } from "../../state/api";
+import { Drawer, Modal, Image as AntImage, Select, Button, Pagination, } from "antd";
+import { Checkbox, Col, Row } from 'antd';
+import type { GetProp } from 'antd';
 import { Image } from "@/types/image";
 
 type CreateProductDrawerProps = {
@@ -19,16 +21,20 @@ type CreateProductDrawerProps = {
 }
 
 const CreateProductDrawer = (props: CreateProductDrawerProps) => {
+  const searchParams = useSearchParams();
+  const productId = searchParams.get("id");
+  const { data: pruductDetail } = useGetProductDetailQuery({ id: productId });
   const [imgList, setImgList] = useState<Image[]>([]);
 
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [page, setPage] = useState(1);
-  const SIZE =100;
- const [selectedImages,setSelectImages] = useState<string[]>([]);
+  const SIZE = 100;
+  const [selectedImages, setSelectImages] = useState<string[]>([]);
   const [imageList, setImageList] = useState<string[]>([]);
   const { data: categories, isLoading } = useGetCategoriesQuery("");
   const list = categories?.data || [];
   const [formData, setFormData] = useState({
+
     name: '',
     categoryId: 0,
     storageMethod: '',
@@ -51,18 +57,23 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
       isDefault: true
     }]
   });
-
+  // 获取产品详情
+  useEffect(() => {
+    if (pruductDetail) {
+      setFormData(pruductDetail?.data);
+    }
+  }, [pruductDetail])
   // 获取图片列表
-  const { data:imageData } = useGetImagePageQuery({
+  const { data: imageData } = useGetImagePageQuery({
     page: 1,
     size: 100
   });
   useEffect(() => {
     console.log('imageData', imageData?.list);
-    if(imageData?.list){
+    if (imageData?.list) {
       setImageList(imageData?.list);
     }
-  },[imageData?.list,page])
+  }, [imageData?.list, page])
 
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -86,6 +97,7 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
   };
   const [createProduct] = useCreateProductMutation();
   const handleSubmit = async (productData: NewProduct) => {
+    console.log('productData', productData);
     for (const key in productData) {
       if (productData[key as keyof NewProduct] === '') {
         console.log(key + '为空', productData[key as keyof NewProduct]);
@@ -94,6 +106,11 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
     }
     // 自动添加 defaultSku 字段
     const defaultSku = productData.skus.find(sku => sku.isDefault) || productData.skus[0];
+    if (productData.productId) {
+      await useUpdateProductMutation({ ...productData, defaultSku });
+      return;
+    }
+
     await createProduct({ ...productData, defaultSku });
   };
 
@@ -142,22 +159,22 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
     return `${categoryCode}${productCode}${skuVariant}`;
   }
 
-  // 处理图片选择
-  const handleImageSelect = (url: string) => {
-    setFormData({...formData, images: [...(formData.images || []), url] });
-    setImageModalOpen(false);
-  };
+
   // 确认图片
   const handleConfirmImages = () => {
     setSelectImages(formData.images || []);
     setImageModalOpen(false);
   }
-  
+  const onChange: GetProp<typeof Checkbox.Group, 'onChange'> = (checkedValues) => {
+    console.log('checked = ', checkedValues);
+    setFormData({ ...formData, images: checkedValues });
+  };
+
 
   return (
     <>
 
-      <form className="mt-5"  method="POST" onSubmit={(e) => {
+      <form className="mt-5" method="POST" onSubmit={(e) => {
         e.preventDefault();
         handleSubmit(formData);
       }}>
@@ -211,24 +228,24 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
           value={formData.description}
           className={inputCssStyles}
         />
-      {/* 添加图片选择区域 */}
-      <div className="mt-4">
-        <h3 className="text-lg font-medium mb-2">商品图片</h3>
-        <div className="flex flex-wrap gap-2 mb-2">
-          {formData.images?.map((url, index) => (
-            <div key={index} className="relative w-24 h-24">
-              <AntImage
-                src={url}
-                alt={`商品图片 ${index + 1}`}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          ))}
+        {/* 添加图片选择区域 */}
+        <div className="mt-4">
+          <h3 className="text-lg font-medium mb-2">商品图片</h3>
+          <div className="flex flex-wrap gap-5 mb-2">
+            {formData.images?.map((url, index) => (
+              <div key={index} className="relative w-24 h-24">
+                <AntImage
+                  src={url}
+                  alt={`商品图片 ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+          <Button type="primary" onClick={() => setImageModalOpen(true)}>
+            选择图片
+          </Button>
         </div>
-        <Button type="primary" onClick={() => setImageModalOpen(true)}>
-          选择图片
-        </Button>
-      </div>
         {/* SKU 信息 */}
         <div className="mt-4">
           <div className="flex justify-between items-center mb-4">
@@ -236,7 +253,7 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
             <Button type="primary" onClick={handleAddSku}>添加规格</Button>
           </div>
 
-          {formData.skus.map((sku, index) => (
+          {formData?.skus?.map((sku, index) => (
             <div key={index} className="border p-4 rounded-md mb-4 relative">
               {index > 0 && (
                 <Button
@@ -411,25 +428,32 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
         onOk={handleConfirmImages}
         width={800}
       >
-        <div className="grid grid-cols-4 gap-4">
-          {imageList.map((item) => (
-            <div
-              key={item.url}
-              className={`relative cursor-pointer border-2 ${selectedImages.includes(item.url) ? 'border-blue-500' : 'border-transparent'}`}
-              onClick={() => handleImageSelect(item.url)}
-            >
-              <AntImage
-                src={item.url}
-                alt={item.name}
-                className="w-full h-32 object-cover"
-              />
-              {selectedImages.includes(item.url) && (
-                <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center">
-                  ✓
-                </div>
-              )}
-            </div>
-          ))}
+        <div>
+          <Checkbox.Group style={{ width: '100%' }} onChange={onChange}>
+            <Row>
+              {imageList.map((item) => (
+                <Col span={8} key={item.url}>
+                  <Checkbox value={item.url}>
+                    <div
+                      className={`relative cursor-pointer border-2 ${selectedImages.includes(item.url) ? 'border-blue-500' : 'border-transparent'}`}
+
+                    >
+                      <AntImage
+                        src={item.url}
+                        alt={item.name}
+                        className="w-full h-32 object-cover"
+                      />
+                      {selectedImages.includes(item.url) && (
+                        <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center">
+                          ✓
+                        </div>
+                      )}
+                    </div>
+                  </Checkbox>
+                </Col>
+              ))}
+            </Row>
+          </Checkbox.Group>
         </div>
         <div className="mt-4 flex justify-center">
           <Pagination
@@ -439,7 +463,7 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
             onChange={(page) => setPage(page)}
           />
         </div>
-      </Modal>
+      </Modal >
     </>
   );
 };

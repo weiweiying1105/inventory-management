@@ -2,14 +2,21 @@
 import { useGetProductsQuery, useCreateProductMutation } from "../state/api"
 import { useState } from 'react'
 import { PlusCircleIcon, SearchIcon } from "lucide-react";
-import Header from "@/app/(components)/Header";
-import Rating from "@/app/(components)/Rating";
-import CreateProductDrawer from "./CreateProductDrawer";
+import type { TableColumnsType, TableProps } from 'antd';
+type TableRowSelection<T extends object = object> = TableProps<T>['rowSelection'];
 import Image from "next/image";
 import { NewProduct, Product } from '@/types/product'
 import Link from 'next/link'
-import {Button} from 'antd'
+import { Button } from 'antd'
 import { Table } from 'antd';
+interface DataType {
+  key: React.ReactNode;
+  name: string;
+  age: number;
+  address: string;
+  children?: DataType[];
+}
+
 const Products = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const {
@@ -17,11 +24,12 @@ const Products = () => {
     isLoading,
     isError,
   } = useGetProductsQuery(searchTerm);
+  const [checkStrictly, setCheckStrictly] = useState(false);
   const products = data?.data?.list;
   function renderImage(images: string[]) {
-    if(!images) return ''
+    if (!images) return ''
     for (let i = 0; i < images.length; i++) {
-     return (
+      return (
         <Image
           key={i}
           src={images[i]}
@@ -31,22 +39,22 @@ const Products = () => {
           className="w-10 h-10 object-cover rounded"
         />
       );
-     
+
     }
   }
- const columns = [
+  const columns = [
     {
       title: '名称',
       dataIndex: 'name',
       key: 'name',
     },
     {
-      title: 'image',
-      dataIndex: 'image',
-      key: 'image',
-      render: (image) => (
-        console.log(image),
-        renderImage(image)
+      title: 'images',
+      dataIndex: 'images',
+      key: 'images',
+      render: (images: string[]) => (
+        console.log(images),
+        renderImage(images)
       ),
     },
     {
@@ -94,12 +102,26 @@ const Products = () => {
       </div>
     );
   }
+  // rowSelection objects indicates the need for row selection
+  const rowSelection: TableRowSelection<DataType> = {
+    onChange: (selectedRowKeys, selectedRows) => {
+      console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+    },
+    onSelect: (record, selected, selectedRows) => {
+      console.log(record, selected, selectedRows);
+    },
+    onSelectAll: (selected, selectedRows, changeRows) => {
+      console.log(selected, selectedRows, changeRows);
+    },
+  };
   return (
-     <div className="mx-auto pb-5 w-full">
+    <div className="mx-auto pb-5 w-full">
+
       {/* SEARCH BAR */}
       <div className="mb-6">
         <div className="flex items-center border-2 border-gray-200 rounded">
           <SearchIcon className="w-5 h-5 text-gray-500 m-2" />
+
           <input
             className="w-full py-2 px-4 rounded bg-white"
             placeholder="Search products..."
@@ -108,9 +130,19 @@ const Products = () => {
           />
         </div>
       </div>
+      <div className="flex justify-end">
+        <Link href={`/products/add`}>
+          <Button type="primary">新增</Button>
+        </Link>
+      </div>
 
       {/* TABLE */}
-      <Table columns={columns} dataSource={products} rowKey="productId" />
+      <Table<DataType>
+        columns={columns}
+        rowSelection={{ ...rowSelection, checkStrictly }}
+        dataSource={products.map(product => ({ ...product, children: product.skus }))}
+
+      />
     </div>
   );
 }

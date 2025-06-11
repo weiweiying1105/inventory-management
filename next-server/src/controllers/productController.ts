@@ -36,6 +36,9 @@ export const getAllProducts = async (req: Request, res: Response): Promise<void>
           isNew: true,
           isRecommend: true,
           createdAt: true,
+          storageMethod: true,
+          rating: true,
+          description: true,
           category: {
             select: {
               categoryName: true // 分类名称
@@ -66,7 +69,7 @@ export const getAllProducts = async (req: Request, res: Response): Promise<void>
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: "获取商品列表失败:"+error
+      error: "获取商品列表失败:" + error
     })
   }
 }
@@ -157,7 +160,7 @@ export const createProductSku = async (req: Request, res: Response) => {
             memberPrice: Number(sku.price),
             stock: Number(sku.stock),
             code: sku.code,
-             unit: sku.unit, // 添加此行以确保 unit 字段存在
+            unit: sku.unit, // 添加此行以确保 unit 字段存在
             specValues: {
               connect: sku.specValueIds.map((id: number) => ({ id }))
             }
@@ -322,7 +325,8 @@ export const updateProductWithSkus = async (req: Request, res: Response) => {
 // ... existing code ...
 export const getProductDetail = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.query;
+    console.log('@@@id', id)
     const product = await prisma.products.findUnique({
       where: { productId: Number(id) },
       include: {
@@ -331,11 +335,8 @@ export const getProductDetail = async (req: Request, res: Response) => {
             values: true
           }
         },
-        skus: {
-          include: {
-            specValues: true
-          }
-        }
+        skus: true
+
       }
     });
 
@@ -353,7 +354,7 @@ export const getProductDetail = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: '获取产品详情失败'
+      error: '获取产品详情失败:' + error
     });
   }
 }

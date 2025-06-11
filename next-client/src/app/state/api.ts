@@ -46,6 +46,31 @@ export const api = createApi({
       }),
       invalidatesTags: ["Products"],
     }),
+    // 获取产品详情
+    getProductDetail: build.query<Product, { id: number }>({// 第一个泛型为返回值类型，第二个泛型为入参类型
+      query: ({ id }) => `/products/detail?id=${id}`,
+      providesTags: (result, error, { id }) => {// 
+        return [{
+          type: 'Products',
+          id
+        }]
+      },
+    }),
+    // 修改产品信息
+    updateProduct: build.mutation<Product, Product>({
+      query: (product) => ({
+        url: "/products/update",
+        method: "POST",
+        body: product,
+      }),
+      invalidatesTags: ["Products"],
+    }),
+    // 删除产品
+    // deleteProduct: build.mutation<Product, { id: number }>({
+    //   query: (product) => ({
+
+    //   })
+    // })
     // 上传图片
     uploadImage: build.mutation<{ url: string }, { image: File }>({
       query: ({ image }) => ({
@@ -129,7 +154,7 @@ export const api = createApi({
   }),
 })
 // build.query的泛型，第一个为返回类型，第二个为查询参数类型
-export const { useUpdateCategoryMutation, useDeleteCategoryMutation, useLoginMutation, useSavePictureMutation, useGetImagePageQuery, useGetDashboardMetricsQuery, useGetExpensesByCategoryQuery, useGetProductsQuery, useCreateProductMutation, useGetUsersQuery, useGetCategoriesQuery, useCreateCategoryMutation, useUploadImageMutation } = api;
+export const { useUpdateProductMutation, useGetProductDetailQuery, useUpdateCategoryMutation, useDeleteCategoryMutation, useLoginMutation, useSavePictureMutation, useGetImagePageQuery, useGetDashboardMetricsQuery, useGetExpensesByCategoryQuery, useGetProductsQuery, useCreateProductMutation, useGetUsersQuery, useGetCategoriesQuery, useCreateCategoryMutation, useUploadImageMutation } = api;
 
 /**
  * 约定俗成的命名规则
