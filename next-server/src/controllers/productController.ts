@@ -318,7 +318,7 @@ export const updateProductWithSkus = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: '更新商品及SKU失败'
+      error: '更新商品及SKU失败:' + error
     });
   }
 }
@@ -326,7 +326,6 @@ export const updateProductWithSkus = async (req: Request, res: Response) => {
 export const getProductDetail = async (req: Request, res: Response) => {
   try {
     const { id } = req.query;
-    console.log('@@@id', id)
     const product = await prisma.products.findUnique({
       where: { productId: Number(id) },
       include: {
@@ -336,6 +335,11 @@ export const getProductDetail = async (req: Request, res: Response) => {
           }
         },
         skus: true
+        //{
+        // include: {
+        //   specValues: true // 添加这一行以包含 skuValues
+        // }
+        // }
 
       }
     });

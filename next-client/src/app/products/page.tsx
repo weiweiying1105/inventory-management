@@ -53,7 +53,7 @@ const Products = () => {
       dataIndex: 'images',
       key: 'images',
       render: (images: string[]) => (
-        console.log(images),
+        // console.log(images),
         renderImage(images)
       ),
     },
@@ -140,7 +140,7 @@ const Products = () => {
       <Table<DataType>
         columns={columns}
         rowSelection={{ ...rowSelection, checkStrictly }}
-        dataSource={products.map(product => ({ ...product, children: product.skus }))}
+        dataSource={products.map(product => ({ ...product, children: product.skus, key: product.productId }))}
 
       />
     </div>

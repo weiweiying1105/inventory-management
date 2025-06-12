@@ -7,7 +7,7 @@
  * @FilePath: \inventory-management\next-client\src\app\products\add\page.tsx
  */
 "use client"
-import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { NewProduct } from "@/types/product";
 import { useGetImagePageQuery, useGetCategoriesQuery, useCreateProductMutation, useUpdateProductMutation, useGetProductDetailQuery } from "../../state/api";
@@ -23,8 +23,7 @@ type CreateProductDrawerProps = {
 const CreateProductDrawer = (props: CreateProductDrawerProps) => {
   const searchParams = useSearchParams();
   const productId = searchParams.get("id");
-  const { data: pruductDetail } = useGetProductDetailQuery({ id: productId });
-  const [imgList, setImgList] = useState<Image[]>([]);
+
 
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [page, setPage] = useState(1);
@@ -33,6 +32,11 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
   const [imageList, setImageList] = useState<string[]>([]);
   const { data: categories, isLoading } = useGetCategoriesQuery("");
   const list = categories?.data || [];
+  // 获取图片列表
+  const { data: imageData } = useGetImagePageQuery({
+    page: 1,
+    size: 100
+  });
   const [formData, setFormData] = useState({
 
     name: '',
@@ -57,24 +61,21 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
       isDefault: true
     }]
   });
-  // 获取产品详情
-  useEffect(() => {
-    if (pruductDetail) {
-      setFormData(pruductDetail?.data);
-    }
-  }, [pruductDetail])
-  // 获取图片列表
-  const { data: imageData } = useGetImagePageQuery({
-    page: 1,
-    size: 100
-  });
+  // 获取图片库
   useEffect(() => {
     console.log('imageData', imageData?.list);
     if (imageData?.list) {
       setImageList(imageData?.list);
     }
   }, [imageData?.list, page])
-
+  // 接口获取产品详情
+  const { data: productDetail } = productId ? useGetProductDetailQuery({ id: productId }) : null;
+  useEffect(() => {
+    if (productDetail) {
+      //  console.log('productDetail', productDetail?.data);
+      productDetail && productDetail?.data && setFormData(productDetail?.data);
+    }
+  }, [productDetail])
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -96,6 +97,7 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
     setFormData({ ...formData, skus: newSkus });
   };
   const [createProduct] = useCreateProductMutation();
+  const [updateProduct] = useUpdateProductMutation();
   const handleSubmit = async (productData: NewProduct) => {
     console.log('productData', productData);
     for (const key in productData) {
@@ -107,11 +109,13 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
     // 自动添加 defaultSku 字段
     const defaultSku = productData.skus.find(sku => sku.isDefault) || productData.skus[0];
     if (productData.productId) {
-      await useUpdateProductMutation({ ...productData, defaultSku });
-      return;
+      await updateProduct({ ...productData, defaultSku });
+
+    } else {
+      await createProduct({ ...productData, defaultSku });
     }
 
-    await createProduct({ ...productData, defaultSku });
+
   };
 
   const labelCssStyles = "block text-sm font-medium text-gray-700";
