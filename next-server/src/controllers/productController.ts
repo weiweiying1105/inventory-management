@@ -87,7 +87,9 @@ export const createProduct = async (req: Request, res: Response) => {
       isPopular,
       isNew,
       isRecommend,
-      defaultSku
+      skus,
+      defaultSku,
+      specGroups
     } = req.body;
 
     if (!name) {
@@ -97,38 +99,106 @@ export const createProduct = async (req: Request, res: Response) => {
       });
     }
 
-    // 在创建 SKU 时添加 unit 字段
     const result = await prisma.$transaction(async (tx) => {
-      // 创建产品基本信息
+      // 创建产品基本信息和规格组
       const product = await tx.products.create({
         data: {
           name,
           categoryId: categoryId ? Number(categoryId) : null,
           storageMethod,
           description,
-          images: images || [],  // 修改这里：image -> images，同时确保是数组类型
+          images: images || [],
           rating: rating ? Number(rating) : 0,
           isHot: isHot || false,
           isPopular: isPopular || false,
           isNew: isNew || false,
           isRecommend: isRecommend || false,
-          skus: {
-            create: {
-              unit: defaultSku.unit, // 添加单位字段
-              retailPrice: Number(defaultSku.retailPrice),
-              wholesalePrice: Number(defaultSku.wholesalePrice),
-              memberPrice: Number(defaultSku.memberPrice),
-              stock: Number(defaultSku.stock),
-              code: defaultSku.code,
-              specValues: {
-                connect: defaultSku.specValueIds?.map((id: number) => ({ id })) || []
-              },
-              isDefault: true
+          // 创建规格组和规格值
+          specGroups: {
+            create: specGroups?.map((group: any) => ({
+              name: group.name,
+              values: {
+                create: group.values?.map((value: any) => ({
+                  value: value.value
+                })) || []
+              }
+            })) || []
+          }
+        },
+        include: {
+          specGroups: {
+            include: {
+              values: true
             }
           }
         }
       });
+
+      // 批量创建SKU，简化逻辑
+      if (skus && skus.length > 0) {
+        // 创建ID映射
+        const specValueIdMap = new Map<string, number>();
+        product.specGroups.forEach(group => {
+          group.values.forEach((value, index) => {
+            const frontendId = `${group.name}_${index}`;
+            specValueIdMap.set(frontendId, value.id);
+          });
+        });
+
+        // 准备SKU数据
+        const skuData = skus.map((sku: any) => {
+          const actualSpecValueIds = sku.specValueIds?.map((frontendId: string) =>
+            specValueIdMap.get(frontendId)
+          ).filter((id: number | undefined) => id !== undefined) || [];
+
+          return {
+            productId: product.productId,
+            unit: sku.unit || '',
+            retailPrice: Number(sku.retailPrice) || 0,
+            wholesalePrice: Number(sku.wholesalePrice) || 0,
+            memberPrice: Number(sku.memberPrice) || 0,
+            weight: Number(sku.weight) || 0,
+            dimensions: sku.dimensions || '',
+            stock: Number(sku.stock) || 0,
+            code: sku.code || '',
+            isDefault: sku.isDefault || false,
+            specValueIds: actualSpecValueIds
+          };
+        });
+
+        // 批量创建SKU
+        for (const skuItem of skuData) {
+          const { specValueIds, ...skuCreateData } = skuItem;
+          await tx.sku.create({
+            data: {
+              ...skuCreateData,
+              specValues: {
+                connect: specValueIds.map((id: number) => ({ id }))
+              }
+            }
+          });
+        }
+      } else {
+        // 创建默认SKU
+        await tx.sku.create({
+          data: {
+            productId: product.productId,
+            unit: defaultSku?.unit || '',
+            retailPrice: Number(defaultSku?.retailPrice) || 0,
+            wholesalePrice: Number(defaultSku?.wholesalePrice) || 0,
+            memberPrice: Number(defaultSku?.memberPrice) || 0,
+            weight: Number(defaultSku?.weight) || 0,
+            dimensions: defaultSku?.dimensions || '',
+            stock: Number(defaultSku?.stock) || 0,
+            code: defaultSku?.code || '',
+            isDefault: true
+          }
+        });
+      }
+
       return product;
+    }, {
+      timeout: 10000 // 设置10秒超时
     });
 
     res.json({
@@ -138,7 +208,7 @@ export const createProduct = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: '创建商品失败'
+      error: '创建商品失败：' + error
     });
   }
 };
@@ -309,6 +379,8 @@ export const updateProductWithSkus = async (req: Request, res: Response) => {
       await tx.sku.deleteMany({ where: { productId: Number(productId), id: { notIn: existingSkuIds } } });
 
       return product;
+    }, {
+      timeout: 10000, // 增加到10秒
     });
 
     res.json({
@@ -322,7 +394,6 @@ export const updateProductWithSkus = async (req: Request, res: Response) => {
     });
   }
 }
-// ... existing code ...
 export const getProductDetail = async (req: Request, res: Response) => {
   try {
     const { id } = req.query;

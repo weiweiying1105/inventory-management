@@ -11,8 +11,8 @@ import {
 import { Cloudinary } from 'cloudinary-core';
 
 const cloudinary = new Cloudinary({
- cloud_name: 'dc6wdjxld', 
-        api_key: '925588468673723', 
+  cloud_name: 'dc6wdjxld',
+  api_key: '925588468673723',
   api_secret: 'gBuAbiJsd-4jaWEDqpCkbwNMogk'
 });
 
@@ -61,39 +61,39 @@ const Pictures = () => {
 
 
 
-const handleUpload = async () => {
-  if (!selectedFile) return;
+  const handleUpload = async () => {
+    if (!selectedFile) return;
 
-  try {
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-    formData.append('upload_preset', 'inventory');
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('upload_preset', 'inventory');
 
-    const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudinary.config().cloud_name}/image/upload`, {
-      method: 'POST',
-      body: formData
-    });
-
-    const data = await response.json();
-    if (data.secure_url) {
-      const newPicture = {
-        ...formData,
-        url: data.secure_url,
-        name: data.original_filename
-      };
-      await savePicture(newPicture);
-      setOpen(false);
-      setSelectedFile(null);
-      setFormData({
-        url: '',
-        name: '',
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudinary.config().cloud_name}/image/upload`, {
+        method: 'POST',
+        body: formData
       });
-      refetch(); // 刷新图片列表
+
+      const data = await response.json();
+      if (data.secure_url) {
+        const newPicture = {
+          ...formData,
+          url: data.secure_url,
+          name: data.original_filename
+        };
+        await savePicture(newPicture);
+        setOpen(false);
+        setSelectedFile(null);
+        setFormData({
+          url: '',
+          name: '',
+        });
+        refetch(); // 刷新图片列表
+      }
+    } catch (error) {
+      console.error('保存图片失败:', error);
     }
-  } catch (error) {
-    console.error('保存图片失败:', error);
   }
-}
   const handleCopyLink = (url: string) => {
     navigator.clipboard.writeText(url);
   }

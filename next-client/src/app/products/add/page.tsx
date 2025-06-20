@@ -8,7 +8,7 @@
  */
 "use client"
 import React, { ChangeEvent, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { NewProduct } from "@/types/product";
 import { useGetImagePageQuery, useGetCategoriesQuery, useCreateProductMutation, useUpdateProductMutation, useGetProductDetailQuery } from "../../state/api";
 import { Drawer, Modal, Image as AntImage, Select, Button, Pagination, } from "antd";
@@ -23,7 +23,7 @@ type CreateProductDrawerProps = {
 const CreateProductDrawer = (props: CreateProductDrawerProps) => {
   const searchParams = useSearchParams();
   const productId = searchParams.get("id");
-
+  const router = useRouter()
 
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [page, setPage] = useState(1);
@@ -49,6 +49,13 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
     isHot: false,
     isNew: false,
     isRecommend: false,
+    specGroups: [   // 示例：
+      {
+        name: '',
+        values: [
+          { value: '' },
+        ]
+      }], // 添加规格组字段
     skus: [{
       unit: '',
       retailPrice: 0,
@@ -58,7 +65,21 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
       dimensions: '',
       stock: 0,
       code: '',
-      isDefault: true
+      isDefault: true,
+      specValues: [
+        // 示例：
+        // {
+        //   specValueIds: [1, 3], // 对应红色+S的规格值ID
+        //   retailPrice: 100,
+        //   wholesalePrice: 80,
+        //   memberPrice: 90,
+        //   stock: 50,
+        //   code: 'AUTO_GENERATED',
+        //   unit: '件',
+        //   weight: 0.5,
+        //   dimensions: '10x10x5',
+        //   isDefault: false
+      ] // 添加规格值字段
     }]
   });
   // 获取图片库
@@ -69,7 +90,7 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
     }
   }, [imageData?.list, page])
   // 接口获取产品详情
-  const { data: productDetail } = productId ? useGetProductDetailQuery({ id: productId }) : null;
+  const { data: productDetail } = productId ? useGetProductDetailQuery({ id: productId }) : { data: null };
   useEffect(() => {
     if (productDetail) {
       //  console.log('productDetail', productDetail?.data);
@@ -112,15 +133,22 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
       await updateProduct({ ...productData, defaultSku });
 
     } else {
-      await createProduct({ ...productData, defaultSku });
+      const res = await createProduct({ ...productData, defaultSku });
     }
 
-
+    router.back()
   };
 
   const labelCssStyles = "block text-sm font-medium text-gray-700";
   const inputCssStyles =
     "block w-full mb-2 p-2 border-gray-500 border-2 rounded-md";
+  const generateSKUCode = (categoryId: number, index: number) => {
+    const categoryCode = categoryId.toString().padStart(2, '0');
+    const productCode = Math.floor(Math.random() * 1000000).toString().padStart(4, '0');
+    const skuVariant = index.toString().padStart(2, '0');
+    return `${categoryCode}${productCode}${skuVariant}`;
+  }
+
 
   // 添加新的 SKU
   const handleAddSku = () => {
@@ -138,7 +166,8 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
           dimensions: '',
           stock: 0,
           code: generateSKUCode(formData.categoryId, newSkuIndex),
-          isDefault: false
+          isDefault: false,
+          specValues: []
         }
       ]
     });
@@ -156,13 +185,6 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
     });
   };
 
-  const generateSKUCode = (categoryId: number, index: number) => {
-    const categoryCode = categoryId.toString().padStart(2, '0');
-    const productCode = Math.floor(Math.random() * 1000000).toString().padStart(4, '0');
-    const skuVariant = index.toString().padStart(2, '0');
-    return `${categoryCode}${productCode}${skuVariant}`;
-  }
-
 
   // 确认图片
   const handleConfirmImages = () => {
@@ -173,8 +195,93 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
     console.log('checked = ', checkedValues);
     setFormData({ ...formData, images: checkedValues });
   };
+  // 添加规格组
+  const handleAddSpecGroup = () => {
+    setFormData({
+      ...formData,
+      specGroups: [
+        ...formData.specGroups,
+        {
+          name: '',
+          values: [{ value: '' }]
+        }
+      ]
+    });
+  };
 
+  // 删除规格组
+  const handleRemoveSpecGroup = (groupIndex: number) => {
+    const newSpecGroups = formData.specGroups.filter((_, i) => i !== groupIndex);
+    setFormData({ ...formData, specGroups: newSpecGroups });
+  };
 
+  // 更新规格组名称
+  const handleSpecGroupNameChange = (groupIndex: number, name: string) => {
+    const newSpecGroups = [...formData.specGroups];
+    newSpecGroups[groupIndex] = { ...newSpecGroups[groupIndex], name };
+    setFormData({ ...formData, specGroups: newSpecGroups });
+  };
+
+  // 添加规格值
+  const handleAddSpecValue = (groupIndex: number) => {
+    const newSpecGroups = [...formData.specGroups];
+    newSpecGroups[groupIndex].values.push({ value: '' });
+    setFormData({ ...formData, specGroups: newSpecGroups });
+  };
+
+  // 删除规格值
+  const handleRemoveSpecValue = (groupIndex: number, valueIndex: number) => {
+    const newSpecGroups = [...formData.specGroups];
+    newSpecGroups[groupIndex].values = newSpecGroups[groupIndex].values.filter((_, i) => i !== valueIndex);
+    setFormData({ ...formData, specGroups: newSpecGroups });
+  };
+
+  // 更新规格值
+  const handleSpecValueChange = (groupIndex: number, valueIndex: number, value: string) => {
+    const newSpecGroups = [...formData.specGroups];
+    newSpecGroups[groupIndex].values[valueIndex] = { value };
+    setFormData({ ...formData, specGroups: newSpecGroups });
+  };
+
+  // 根据规格组合生成SKU
+  const generateSkuCombinations = () => {
+    if (formData.specGroups.length === 0) {
+      // 如果没有规格组，创建一个默认SKU
+      return [{
+        specValueIds: [],
+        retailPrice: 0,
+        wholesalePrice: 0,
+        memberPrice: 0,
+        stock: 0,
+        code: generateSKUCode(formData.categoryId, 0),
+        unit: '',
+        weight: 0,
+        dimensions: '',
+        isDefault: true
+      }];
+    }
+
+    // ... existing code ...
+
+    return allCombinations.map((combination, index) => ({
+      specValueIds: combination.map(item => item.id),
+      specValueNames: combination.map(item => `${item.groupName}:${item.value}`).join(', '),
+      retailPrice: 0,
+      wholesalePrice: 0,
+      memberPrice: 0,
+      stock: 0,
+      code: generateSKUCode(formData.categoryId, index),
+      unit: '',
+      weight: 0,
+      dimensions: '',
+      isDefault: index === 0
+    }));
+  };
+  // 当规格组变化时，重新生成SKU
+  const handleSpecGroupsChange = () => {
+    const newSkus = generateSkuCombinations();
+    setFormData({ ...formData, skus: newSkus });
+  };
   return (
     <>
 
@@ -250,121 +357,243 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
             选择图片
           </Button>
         </div>
-        {/* SKU 信息 */}
+        {/* 规格组管理 */}
+
+        {/* 规格组管理 */}
         <div className="mt-4">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium">SKU 信息</h3>
-            <Button type="primary" onClick={handleAddSku}>添加规格</Button>
+            <h3 className="text-lg font-medium">商品规格设置</h3>
+            <Button type="primary" onClick={handleAddSpecGroup}>添加规格组</Button>
           </div>
 
-          {formData?.skus?.map((sku, index) => (
-            <div key={index} className="border p-4 rounded-md mb-4 relative">
-              {index > 0 && (
-                <Button
-                  type="text"
-                  danger
-                  className="absolute top-2 right-2"
-                  onClick={() => handleRemoveSku(index)}
-                >
-                  删除
-                </Button>
-              )}
+          {formData.specGroups?.map((group, groupIndex) => (
+            <div key={groupIndex} className="border p-4 rounded-md mb-4 relative">
+              {/* 规格组名称和规格值设置 */}
+              <Button
+                type="text"
+                danger
+                className="absolute top-1 right-2"
+                onClick={() => handleRemoveSpecGroup(groupIndex)}
+              >
+                删除规格组
+              </Button>
 
               <div className="mb-4">
-                <label className={labelCssStyles}>默认规格</label>
+                <label className={labelCssStyles}>规格组名称</label>
                 <input
-                  type="checkbox"
-                  name="isDefault"
-                  checked={sku.isDefault}
-                  onChange={(e) => {
-                    const newSkus = formData.skus.map((s, i) => ({
-                      ...s,
-                      isDefault: i === index ? e.target.checked : false
-                    }));
-                    setFormData({ ...formData, skus: newSkus });
-                  }}
-                  className="mr-2"
+                  type="text"
+                  placeholder="如：颜色、尺寸等"
+                  value={group.name}
+                  onChange={(e) => handleSpecGroupNameChange(groupIndex, e.target.value)}
+                  className={inputCssStyles}
+                  required
                 />
               </div>
 
-              <label htmlFor={`unit-${index}`} className={labelCssStyles}>单位</label>
-              <input
-                type="text"
-                name="unit"
-                placeholder="单位（如：条、kg、100g等）"
-                onChange={(e) => handleSkuChange(e, index)}
-                value={sku.unit}
-                className={inputCssStyles}
-                required
-              />
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <label className={labelCssStyles}>规格值</label>
+                  <Button size="small" onClick={() => handleAddSpecValue(groupIndex)}>添加规格值</Button>
+                </div>
 
-              <label htmlFor={`retailPrice-${index}`} className={labelCssStyles}>零售价</label>
-              <input
-                type="number"
-                name="retailPrice"
-                placeholder="零售价"
-                onChange={(e) => handleSkuChange(e, index)}
-                value={sku.retailPrice}
-                className={inputCssStyles}
-                required
-              />
+                {group.values?.map((value, valueIndex) => (
+                  <div key={valueIndex} className="flex items-center mb-2">
+                    <input
+                      type="text"
+                      placeholder="规格值"
+                      value={value.value}
+                      onChange={(e) => handleSpecValueChange(groupIndex, valueIndex, e.target.value)}
+                      className={`${inputCssStyles} flex-1 mr-2`}
+                      required
+                    />
+                    {group.values.length > 1 && (
+                      <Button
+                        size="small"
+                        danger
+                        onClick={() => handleRemoveSpecValue(groupIndex, valueIndex)}
+                      >
+                        删除
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
 
-              <label htmlFor={`wholesalePrice-${index}`} className={labelCssStyles}>批发价</label>
-              <input
-                type="number"
-                name="wholesalePrice"
-                placeholder="批发价"
-                onChange={(e) => handleSkuChange(e, index)}
-                value={sku.wholesalePrice}
-                className={inputCssStyles}
+          {/* 生成SKU按钮 */}
+          <div className="mb-4">
+            <Button
+              type="default"
+              onClick={handleSpecGroupsChange}
+              disabled={formData.specGroups.length === 0}
+            >
+              根据规格组合生成SKU
+            </Button>
+          </div>
+        </div>
 
-              />
+        {/* SKU价格和库存设置 */}
+        <div className="mt-4">
+          <h3 className="text-lg font-medium">SKU价格库存设置</h3>
+          {formData.skus?.map((sku, index) => (
+            <div key={index} className="border p-4 rounded-md mb-4">
+              <div className="mb-2">
+                <strong>规格组合：</strong>
+                {sku.specValueNames || '默认规格'}
+              </div>
 
-              <label htmlFor={`memberPrice-${index}`} className={labelCssStyles}>会员价</label>
-              <input
-                type="number"
-                name="memberPrice"
-                placeholder="会员价"
-                onChange={(e) => handleSkuChange(e, index)}
-                value={sku.memberPrice}
-                className={inputCssStyles}
-              />
+              {/* 是否默认规格 */}
+              <div className="mb-4">
+                <label className="inline-flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={sku.isDefault}
+                    onChange={(e) => {
+                      const newSkus = [...formData.skus];
+                      // 如果设置为默认，其他SKU取消默认
+                      if (e.target.checked) {
+                        newSkus.forEach((s, i) => {
+                          s.isDefault = i === index;
+                        });
+                      } else {
+                        newSkus[index].isDefault = false;
+                      }
+                      setFormData({ ...formData, skus: newSkus });
+                    }}
+                    className="mr-2"
+                  />
+                  设为默认规格
+                </label>
+              </div>
 
-              <label htmlFor={`weight-${index}`} className={labelCssStyles}>重量</label>
-              <input
-                type="number"
-                name="weight"
-                placeholder="重量"
-                onChange={(e) => handleSkuChange(e, index)}
-                value={sku.weight}
-                className={inputCssStyles}
-              />
+              {/* 基本信息 */}
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className={labelCssStyles}>单位</label>
+                  <input
+                    type="text"
+                    placeholder="如：件、个、盒等"
+                    value={sku.unit}
+                    onChange={(e) => {
+                      const newSkus = [...formData.skus];
+                      newSkus[index].unit = e.target.value;
+                      setFormData({ ...formData, skus: newSkus });
+                    }}
+                    className={inputCssStyles}
+                  />
+                </div>
+                <div>
+                  <label className={labelCssStyles}>重量(kg)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="商品重量"
+                    value={sku.weight}
+                    onChange={(e) => {
+                      const newSkus = [...formData.skus];
+                      newSkus[index].weight = Number(e.target.value);
+                      setFormData({ ...formData, skus: newSkus });
+                    }}
+                    className={inputCssStyles}
+                  />
+                </div>
+              </div>
 
-              <label htmlFor={`dimensions-${index}`} className={labelCssStyles}>尺寸</label>
-              <input
-                type="text"
-                name="dimensions"
-                placeholder="包装尺寸(选填)"
-                onChange={(e) => handleSkuChange(e, index)}
-                value={sku.dimensions}
-                className={inputCssStyles}
-              />
+              {/* 尺寸 */}
+              <div className="mb-4">
+                <label className={labelCssStyles}>尺寸规格</label>
+                <input
+                  type="text"
+                  placeholder="如：长x宽x高(cm)"
+                  value={sku.dimensions}
+                  onChange={(e) => {
+                    const newSkus = [...formData.skus];
+                    newSkus[index].dimensions = e.target.value;
+                    setFormData({ ...formData, skus: newSkus });
+                  }}
+                  className={inputCssStyles}
+                />
+              </div>
 
-              <label htmlFor={`stock-${index}`} className={labelCssStyles}>库存</label>
-              <input
-                type="number"
-                name="stock"
-                placeholder="库存"
-                onChange={(e) => handleSkuChange(e, index)}
-                value={sku.stock}
-                className={inputCssStyles}
-                required
-              />
+              {/* 价格设置 */}
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className={labelCssStyles}>零售价</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={sku.retailPrice}
+                    onChange={(e) => {
+                      const newSkus = [...formData.skus];
+                      newSkus[index].retailPrice = Number(e.target.value);
+                      setFormData({ ...formData, skus: newSkus });
+                    }}
+                    className={inputCssStyles}
+                  />
+                </div>
+                <div>
+                  <label className={labelCssStyles}>批发价</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={sku.wholesalePrice}
+                    onChange={(e) => {
+                      const newSkus = [...formData.skus];
+                      newSkus[index].wholesalePrice = Number(e.target.value);
+                      setFormData({ ...formData, skus: newSkus });
+                    }}
+                    className={inputCssStyles}
+                  />
+                </div>
+                <div>
+                  <label className={labelCssStyles}>会员价</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={sku.memberPrice}
+                    onChange={(e) => {
+                      const newSkus = [...formData.skus];
+                      newSkus[index].memberPrice = Number(e.target.value);
+                      setFormData({ ...formData, skus: newSkus });
+                    }}
+                    className={inputCssStyles}
+                  />
+                </div>
+                <div>
+                  <label className={labelCssStyles}>库存</label>
+                  <input
+                    type="number"
+                    value={sku.stock}
+                    onChange={(e) => {
+                      const newSkus = [...formData.skus];
+                      newSkus[index].stock = Number(e.target.value);
+                      setFormData({ ...formData, skus: newSkus });
+                    }}
+                    className={inputCssStyles}
+                  />
+                </div>
+              </div>
 
-
+              {/* SKU编码 */}
+              <div className="mb-4">
+                <label className={labelCssStyles}>SKU编码</label>
+                <input
+                  type="text"
+                  placeholder="自动生成或手动输入"
+                  value={sku.code}
+                  onChange={(e) => {
+                    const newSkus = [...formData.skus];
+                    newSkus[index].code = e.target.value;
+                    setFormData({ ...formData, skus: newSkus });
+                  }}
+                  className={inputCssStyles}
+                />
+              </div>
             </div>
           ))}
         </div>
+
 
         {/* 商品属性 */}
         <div className="mt-4">

@@ -21,16 +21,22 @@ model SpecGroup {
   id        Int         @id @default(autoincrement())
   name      String
   productId Int
-  product   Products    @relation(fields: [productId], references: [productId])
+  product   Products    @relation(fields: [productId], references: [productId], onDelete: Cascade) // 添加级联删除
   values    SpecValue[]
+  sort      Int         @default(0) // 添加排序字段
+
+  @@index([productId])
 }
 
 model SpecValue {
   id      Int       @id @default(autoincrement())
   value   String
   groupId Int
-  group   SpecGroup @relation(fields: [groupId], references: [id])
+  group   SpecGroup @relation(fields: [groupId], references: [id], onDelete: Cascade) // 添加级联删除
   skus    Sku[]     @relation("SkuToSpecValue")
+  sort    Int       @default(0) // 添加排序字段
+
+  @@index([groupId])
 }
 
 model Category {
@@ -116,8 +122,12 @@ model Sku {
   wholesalePDateTime DateTime?
   wholesalePrice     Float?
   unit               String?
-  product            Products    @relation(fields: [productId], references: [productId])
+  product            Products    @relation(fields: [productId], references: [productId], onDelete: Cascade)
   specValues         SpecValue[] @relation("SkuToSpecValue")
+
+  // 添加复合索引
+  @@index([productId])
+  @@index([productId, isDefault])
 }
 
 model PurchaseSummary {
@@ -165,6 +175,8 @@ model Customers {
   updatedAt   DateTime @updatedAt
   lastLoginAt DateTime @default(now())
   session_key String?
+
+  @@unique([id, openid])
 }
 
 model Banner {

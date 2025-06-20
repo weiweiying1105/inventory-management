@@ -24,13 +24,18 @@ const CardPopularProducts = () => {
                 className="flex items-center justify-between gap-3 px-5 py-7 border-b"
               >
                 <div className="flex items-center gap-3">
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    width={48}
-                    height={48}
-                    className="rounded-lg w-14 h-14"
-                  />
+                  {product?.images.forEach((element: string) => {
+                    return (
+                      <Image
+                        src={element}
+                        alt={product.name}
+                        width={48}
+                        height={48}
+                        className="rounded-lg w-14 h-14"
+                      />
+                    )
+                  })
+                  }
                   <div className="flex flex-col justify-between gap-1">
                     <div className="font-bold text-gray-700">
                       {product.name}

@@ -20,6 +20,7 @@ import AuthRouter from './routes/authRoute'
 
 // mini路由
 import minihome from './routes/mini/homeRoute'
+import miniAuth from './routes/mini/authRoute'
 
 dotenv.config()
 const app = express();
@@ -68,6 +69,9 @@ app.use('/auth', AuthRouter)
 // ------------------------------------------------ server
 // 小程序
 app.use('/mini', minihome)
+app.use('/mini', miniAuth)
+
+// 小程序------------------------------------------end
 const port = Number(process.env.PORT) || 3001;
 // 需要添加0.0.0.0来代表监听所有可用的网络接口，而不仅仅是 localhost。
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
