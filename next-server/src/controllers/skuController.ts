@@ -22,7 +22,7 @@ export const addProductSpecs = async (req: Request, res: Response) => {
     //   ]
     // }
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       // 创建规格组和规格值
       const groups = await Promise.all(
         specs.groups.map(async (group: any) => {

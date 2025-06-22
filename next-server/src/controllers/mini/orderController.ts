@@ -3,8 +3,6 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export const uplateImage = async (req: Request, res: Response) => {
-  try {
+export const createOrder = async (req: Request, res: Response) => {
 
-  }
 }

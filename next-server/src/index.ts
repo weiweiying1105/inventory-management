@@ -21,7 +21,9 @@ import AuthRouter from './routes/authRoute'
 // mini路由
 import minihome from './routes/mini/homeRoute'
 import miniAuth from './routes/mini/authRoute'
-
+import userRoute from './routes/mini/userRoute'
+import miniCategory from './routes/mini/categoryRoute'
+import miniProduct from './routes/mini/productRoute'
 dotenv.config()
 const app = express();
 
@@ -70,6 +72,9 @@ app.use('/auth', AuthRouter)
 // 小程序
 app.use('/mini', minihome)
 app.use('/mini', miniAuth)
+app.use('/mini', userRoute)
+app.use('/mini', miniCategory)
+app.use('/mini', miniProduct)
 
 // 小程序------------------------------------------end
 const port = Number(process.env.PORT) || 3001;

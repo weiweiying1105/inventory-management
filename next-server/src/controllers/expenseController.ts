@@ -19,7 +19,7 @@ export const getExpenseByCategory = async (req: Request, res: Response): Promise
       }
     })
 
-    const expenseByCategorySummary = expenseByCategorySummaryRaw.map((expense) => ({
+    const expenseByCategorySummary = expenseByCategorySummaryRaw.map((expense: any) => ({
       ...expense,
       amount: expense.amount.toString(),
     }))

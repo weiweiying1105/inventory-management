@@ -97,16 +97,3 @@ export const wxAuth = async (req: Request, res: Response) => {
   }
 }
 
-export const getUserInfo = async (req: Request, res: Response) => {
-  try {
-    res.json({
-      code: 200,
-      message: "获取用户信息成功",
-      data: {
-        userInfo: null, countsData: null, orderTagInfos: null, customerServiceInfo: null
-      }
-    })
-  } catch (error) {
-    res.status(500).json({ error: "获取用户信息失败", message: error });
-  }
-}

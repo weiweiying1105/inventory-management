@@ -20,9 +20,9 @@
     "@mui/material": "^7.1.0",
     "@mui/x-data-grid": "^7.27.1",
     "@reduxjs/toolkit": "^2.6.0",
-    "@types/node": "^22.13.5",
+    "@types/node": "24.0.3",
     "@types/numeral": "^2.0.5",
-    "@types/react": "^19.0.10",
+    "@types/react": "19.1.8",
     "@types/uuid": "^10.0.0",
     "antd": "latest",
     "axios": "^1.7.9",
@@ -31,7 +31,7 @@
     "cloudinary-react": "^1.8.1",
     "dotenv": "^16.4.7",
     "lucide-react": "^0.476.0",
-    "next": "15.3.3",
+    "next": "^15.3.4",
     "next-cloudinary": "^6.16.0",
     "numeral": "^2.0.6",
     "react": "^18.3.1",
@@ -54,6 +54,6 @@
     "tailwindcss": "^3.4.1",
     "turbopack": "^0.0.1",
     "tw-colors": "^3.3.2",
-    "typescript": "^5"
+    "typescript": "5.8.3"
   }
 }

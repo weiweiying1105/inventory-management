@@ -99,7 +99,7 @@ export const createProduct = async (req: Request, res: Response) => {
       });
     }
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       // 创建产品基本信息和规格组
       const product = await tx.products.create({
         data: {
@@ -138,8 +138,8 @@ export const createProduct = async (req: Request, res: Response) => {
       if (skus && skus.length > 0) {
         // 创建ID映射
         const specValueIdMap = new Map<string, number>();
-        product.specGroups.forEach(group => {
-          group.values.forEach((value, index) => {
+        product.specGroups.forEach((group: any) => {
+          group.values.forEach((value: any, index: number) => {
             const frontendId = `${group.name}_${index}`;
             specValueIdMap.set(frontendId, value.id);
           });
@@ -318,7 +318,7 @@ export const updateProductWithSkus = async (req: Request, res: Response) => {
       skus // 前端传递的sku数组，包含id（有则为更新，无则为新增）、isDefault等字段
     } = req.body;
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       // 1. 更新商品基本信息
       const product = await tx.products.update({
         where: { productId: Number(productId) },
