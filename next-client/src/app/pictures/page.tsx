@@ -128,9 +128,8 @@ const Pictures = () => {
         </ImageListItem>
       ))}
     </ImageList>
-
     <Pagination
-      count={Math.ceil(imageData?.pagination?.total || 0 / SIZE)}
+      count={Math.ceil((imageData?.pagination?.total || 0) / SIZE)}
       page={page}
       onChange={(_, value) => handlePageChange(value)}
     />

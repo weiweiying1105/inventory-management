@@ -24,6 +24,12 @@ import miniAuth from './routes/mini/authRoute'
 import userRoute from './routes/mini/userRoute'
 import miniCategory from './routes/mini/categoryRoute'
 import miniProduct from './routes/mini/productRoute'
+//------------------------------------------------ mini路由end
+
+//------------------------------------------------ 中间件
+// import openidMiddleware from './middleware/openidMiddleware';
+
+
 dotenv.config()
 const app = express();
 
@@ -58,6 +64,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 //是 cors 中间件的一个函数，用于设置跨域资源共享（CORS）策略，允许来自特定来源的请求访问资源。
 app.use(cors());
+
+// app.use(openidMiddleware);
 
 // ------------------------------------------------ 路由
 app.use('/dashboard', dashboard)
