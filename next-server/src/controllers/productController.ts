@@ -31,6 +31,7 @@ export const getAllProducts = async (req: Request, res: Response): Promise<void>
           productId: true, // 明确返回产品id
           name: true,
           images: true,
+          thumb: true, // 主图
           isHot: true,
           isPopular: true,
           isNew: true,
@@ -41,6 +42,7 @@ export const getAllProducts = async (req: Request, res: Response): Promise<void>
           description: true,
           category: {
             select: {
+              id: true,
               categoryName: true // 分类名称
             }
           },
@@ -48,7 +50,6 @@ export const getAllProducts = async (req: Request, res: Response): Promise<void>
             where: { isDefault: true }
           }
         },
-
         orderBy: { createdAt: 'desc' }
       }),
       prisma.products.count({ where })
@@ -82,6 +83,7 @@ export const createProduct = async (req: Request, res: Response) => {
       storageMethod,
       description,
       images,
+      thumb,
       rating,
       isHot,
       isPopular,
@@ -89,7 +91,8 @@ export const createProduct = async (req: Request, res: Response) => {
       isRecommend,
       skus,
       defaultSku,
-      specGroups
+      specGroups,
+      tags, // 新增 tags 字段
     } = req.body;
 
     if (!name) {
@@ -104,15 +107,17 @@ export const createProduct = async (req: Request, res: Response) => {
       const product = await tx.products.create({
         data: {
           name,
-          categoryId: categoryId ? Number(categoryId) : null,
+          category: categoryId ? { connect: { id: Number(categoryId) } } : undefined,
           storageMethod,
           description,
           images: images || [],
+          thumb: thumb || null,
           rating: rating ? Number(rating) : 0,
           isHot: isHot || false,
           isPopular: isPopular || false,
           isNew: isNew || false,
           isRecommend: isRecommend || false,
+          tags: tags || [], // 保存标签
           // 创建规格组和规格值
           specGroups: {
             create: specGroups?.map((group: any) => ({
@@ -310,12 +315,14 @@ export const updateProductWithSkus = async (req: Request, res: Response) => {
       storageMethod,
       description,
       images,
+      thumb,
       rating,
       isHot,
       isPopular,
       isNew,
       isRecommend,
-      skus // 前端传递的sku数组，包含id（有则为更新，无则为新增）、isDefault等字段
+      skus,// 前端传递的sku数组，包含id（有则为更新，无则为新增）、isDefault等字段
+      tags,
     } = req.body;
 
     const result = await prisma.$transaction(async (tx: any) => {
@@ -328,11 +335,13 @@ export const updateProductWithSkus = async (req: Request, res: Response) => {
           storageMethod,
           description,
           images: images || [],
+          thumb: thumb || null,
           rating: rating ? Number(rating) : 0,
           isHot: isHot || false,
           isPopular: isPopular || false,
           isNew: isNew || false,
           isRecommend: isRecommend || false,
+          tags: tags || []
         }
       });
 
@@ -405,7 +414,11 @@ export const getProductDetail = async (req: Request, res: Response) => {
             values: true
           }
         },
-        skus: true
+        skus: {
+          include: {
+            specValues: true
+          }
+        }
         //{
         // include: {
         //   specValues: true // 添加这一行以包含 skuValues

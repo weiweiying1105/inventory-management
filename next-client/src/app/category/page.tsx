@@ -1,10 +1,13 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useGetCategoriesQuery, useCreateCategoryMutation, useUpdateCategoryMutation, useDeleteCategoryMutation } from '../state/api'
 import { ICategory } from "@/types/category"
-import { Table, Drawer, Button, Form, Input, Select, message } from 'antd';
+import { Table, Drawer, Button, Form, Input, Select, message, TreeSelect } from 'antd';
+import { Drawer as AntDrawer, Modal, Image as AntImage } from 'antd';
+import { UploadOutlined } from '@ant-design/icons';
+import { useGetImagePageQuery } from '../state/api';
 
 const Category = () => {
   const [form] = Form.useForm();
@@ -13,7 +16,29 @@ const Category = () => {
 
   const { data: categories, isLoading } = useGetCategoriesQuery("")
   const list = categories?.data || []
-
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [selectedThumbnail, setSelectedThumbnail] = useState<string | null>(null);
+ const [page, setPage] = useState(1);
+  const SIZE = 100;
+  const [imageList, setImageList] = useState<string[]>([]);
+  // 获取图片列表
+  const { data: imageData } = useGetImagePageQuery({
+    page,
+    size: SIZE
+  });
+  console.log('imageData',imageData)
+ // 获取图片库
+  useEffect(() => {
+    console.log('imageData', imageData?.list);
+    if (imageData?.list) {
+      setImageList(imageData?.list);
+    }
+  }, [imageData?.list, page])
+  const handleThumbnailSelect = (url: string) => {
+    setSelectedThumbnail(url);
+    form.setFieldsValue({ thumbnail: url });
+    setImageModalOpen(false);
+  };
   const [createCategory] = useCreateCategoryMutation()
   const [updateCategory] = useUpdateCategoryMutation()
   const [deleteCategory] = useDeleteCategoryMutation()
@@ -41,7 +66,8 @@ const Category = () => {
       categoryName: record.categoryName,
       description: record.description,
       parentId: record.parentId,
-      subCategoryName: record.subCategoryName
+      subCategoryName: record.subCategoryName,
+      thumbnail: record.thumbnail
     })
     setOpen(true)
   }
@@ -75,6 +101,12 @@ const Category = () => {
       title: '产品数量',
       key: 'productsCount',
       render: (record: ICategory) => record.products?.length || 0
+    },
+    {
+      title: '缩略图',
+      dataIndex: 'thumbnail',
+      key: 'thumbnail',
+      render: (thumbnail: string) => thumbnail ? <img src={thumbnail} alt="缩略图" style={{ width: 40, height: 40, objectFit: 'cover' }} /> : null
     },
     {
       title: '操作',
@@ -142,16 +174,31 @@ const Category = () => {
             name="parentId"
             label="父级分类"
           >
-            <Select
+            <TreeSelect
               allowClear
               placeholder="请选择父级分类"
-            >
-              {list.map((category: ICategory) => (
-                <Select.Option key={category.id} value={category.id}>
-                  {category.categoryName}
-                </Select.Option>
-              ))}
-            </Select>
+              treeDefaultExpandAll
+              treeData={list.filter((category: ICategory) => !editId || category.id !== editId).map((category: ICategory) => ({
+                title: category.categoryName,
+                value: category.id,
+                key: category.id,
+                children: Array.isArray(category.subCategory) && category.subCategory.length > 0
+                  ? category.subCategory.map((sub: ICategory) => ({
+                      title: sub.categoryName,
+                      value: sub.id,
+                      key: sub.id,
+                      children: Array.isArray(sub.subCategory) && sub.subCategory.length > 0
+                        ? sub.subCategory.map((sub2: ICategory) => ({
+                            title: sub2.categoryName,
+                            value: sub2.id,
+                            key: sub2.id,
+                            children: sub2.subCategory // 可继续递归
+                          }))
+                        : undefined
+                  }))
+                : undefined
+              }))}
+            />
           </Form.Item>
 
           <Form.Item
@@ -160,6 +207,37 @@ const Category = () => {
           >
             <Input placeholder="请输入子分类名称" />
           </Form.Item>
+
+          <Form.Item
+            name="thumbnail"
+            label="缩略图"
+          >
+            <Button icon={<UploadOutlined />} onClick={() => setImageModalOpen(true)}>
+              选择图片
+            </Button>
+            {form.getFieldValue('thumbnail') && (
+              <img src={form.getFieldValue('thumbnail')} alt="缩略图预览" style={{ width: 80, height: 80, marginTop: 8, objectFit: 'cover' }} />
+            )}
+          </Form.Item>
+          <Modal
+            title="选择缩略图"
+            open={imageModalOpen}
+            onCancel={() => setImageModalOpen(false)}
+            footer={null}
+            width={600}
+          >
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+              {(imageData?.list || []).map((img: any, idx: number) => {
+                // 兼容 img 既可能为 string 也可能为 Image 类型
+                const url = typeof img === 'string' ? img : (img && typeof img.url === 'string' ? img.url : '');
+                return (
+                  <div key={url || idx} style={{ border: form.getFieldValue('thumbnail') === url ? '2px solid #1890ff' : '1px solid #eee', borderRadius: 4, padding: 4, cursor: 'pointer' }} onClick={() => handleThumbnailSelect(url)}>
+                    <AntImage src={url} width={100} height={100} style={{ objectFit: 'cover' }} preview={false} />
+                  </div>
+                );
+              })}
+            </div>
+          </Modal>
 
           <div className="flex justify-end space-x-4">
             <Button onClick={() => setOpen(false)}>取消</Button>
@@ -174,3 +252,4 @@ const Category = () => {
 }
 
 export default Category
+

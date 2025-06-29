@@ -26,6 +26,7 @@
     "@types/uuid": "^10.0.0",
     "antd": "latest",
     "axios": "^1.7.9",
+    "browser-image-compression": "^2.0.2",
     "cloudinary": "^2.6.1",
     "cloudinary-core": "^2.13.1",
     "cloudinary-react": "^1.8.1",

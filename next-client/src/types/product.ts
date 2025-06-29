@@ -1,5 +1,6 @@
 export interface Product extends NewProduct {
   productId: string;
+  categoryId?: number;
 }
 interface Sku { }
 export interface NewProduct {
@@ -15,7 +16,8 @@ export interface NewProduct {
   isRecommend?: boolean;
   storageMethod?: string;
   skus: Sku[];
-  productId?: string
+  productId?: string;
+  categoryId?: number;
 }
 export interface Category {
   id?: number;

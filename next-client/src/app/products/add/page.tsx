@@ -14,7 +14,9 @@ import { useGetImagePageQuery, useGetCategoriesQuery, useCreateProductMutation, 
 import { Drawer, Modal, Image as AntImage, Select, Button, Pagination, } from "antd";
 import { Checkbox, Col, Row } from 'antd';
 import type { GetProp } from 'antd';
-import { Image } from "@/types/image";
+import { ICategory } from "@/types/category"
+import { TreeSelect } from "antd";
+import { truncate } from "fs";
 
 type CreateProductDrawerProps = {
 
@@ -38,12 +40,13 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
     size: 100
   });
   const [formData, setFormData] = useState({
-
+    tags:[],
     name: '',
     categoryId: 0,
     storageMethod: '',
     description: '',
-    images: [],
+    images: [] as string[],
+    thumb: '',
     rating: 0,
     isPopular: false,
     isHot: false,
@@ -191,9 +194,13 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
     setSelectImages(formData.images || []);
     setImageModalOpen(false);
   }
-  const onChange: GetProp<typeof Checkbox.Group, 'onChange'> = (checkedValues) => {
+  const onImageChange: GetProp<typeof Checkbox.Group, 'onChange'> = (checkedValues) => {
     console.log('checked = ', checkedValues);
-    setFormData({ ...formData, images: checkedValues });
+    if (chooseImgType === 'thumb') {
+      setFormData({ ...formData, thumb: checkedValues[0] as string });
+    } else {
+      setFormData({ ...formData, images: checkedValues as string[] });
+    }
   };
   // 添加规格组
   const handleAddSpecGroup = () => {
@@ -245,8 +252,15 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
 
   // 根据规格组合生成SKU
   const generateSkuCombinations = () => {
-    if (formData.specGroups.length === 0) {
-      // 如果没有规格组，创建一个默认SKU
+    // 过滤掉无效的规格组和规格值
+    const validGroups = formData.specGroups
+      .filter(group => group.name && group.values && group.values.some(v => v.value))
+      .map(group => ({
+        name: group.name,
+        values: group.values.filter(v => v.value)
+      }));
+    if (validGroups.length === 0) {
+      // 如果没有有效规格组，创建一个默认SKU
       return [{
         specValueIds: [],
         retailPrice: 0,
@@ -260,9 +274,21 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
         isDefault: true
       }];
     }
-
-    // ... existing code ...
-
+    // 计算所有规格值的组合
+    const groups = validGroups.map(group =>
+      group.values.map(value => ({
+        groupName: group.name,
+        value: value.value,
+        id: value.id || `${group.name}-${value.value}`
+      }))
+    );
+    // Cartesian product utility
+    function cartesian(arr) {
+      if (arr.length === 0) return [];
+      if (arr.length === 1) return arr[0].map(item => [item]);
+      return arr.reduce((a, b) => a.flatMap(d => b.map(e => [].concat(d, e))));
+    }
+    const allCombinations = groups.length > 0 ? cartesian(groups) : [];
     return allCombinations.map((combination, index) => ({
       specValueIds: combination.map(item => item.id),
       specValueNames: combination.map(item => `${item.groupName}:${item.value}`).join(', '),
@@ -282,6 +308,14 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
     const newSkus = generateSkuCombinations();
     setFormData({ ...formData, skus: newSkus });
   };
+
+const [chooseImgType, setChooseImgType] = useState('image');
+const handleOpenModal = (type:string) => {
+    setChooseImgType(type);
+    setImageModalOpen(true);
+}
+   
+  
   return (
     <>
 
@@ -301,26 +335,32 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
         />
 
         <label htmlFor="categoryId" className={labelCssStyles}>Category</label>
-        <Select
-          className="w-full mb-2"
-          name="categoryId"
-          placeholder="请选择商品分类"
-          value={formData.categoryId || undefined}
-          onChange={(value) => setFormData({ ...formData, categoryId: value })}
-        >
-          {list.map((category) => (
-            <React.Fragment key={category.id}>
-              <Select.Option value={category.id}>
-                {category.categoryName}
-              </Select.Option>
-              {category.subCategory?.map((sub) => (
-                <Select.Option key={sub.id} value={sub.id}>
-                  ├─ {sub.categoryName}
-                </Select.Option>
-              ))}
-            </React.Fragment>
-          ))}
-        </Select>
+         <TreeSelect
+              allowClear
+              placeholder="请选择父级分类"
+              treeDefaultExpandAll
+              treeData={list.map((category: ICategory) => ({
+                title: category.categoryName,
+                value: category.id,
+                key: category.id,
+                children: Array.isArray(category.subCategory) && category.subCategory.length > 0
+                  ? category.subCategory.map((sub: ICategory) => ({
+                      title: sub.categoryName,
+                      value: sub.id,
+                      key: sub.id,
+                      children: Array.isArray(sub.subCategory) && sub.subCategory.length > 0
+                        ? sub.subCategory.map((sub2: ICategory) => ({
+                            title: sub2.categoryName,
+                            value: sub2.id,
+                            key: sub2.id,
+                            children: sub2.subCategory // 可继续递归
+                          }))
+                        : undefined
+                  }))
+                : undefined
+              }))}
+              onChange={(value) => setFormData({ ...formData, categoryId: value })}
+            />
         <label htmlFor="storageMethod" className={labelCssStyles}>存储方式</label>
         <input
           type="text"
@@ -339,6 +379,22 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
           value={formData.description}
           className={inputCssStyles}
         />
+         {/* 添加图片选择区域 */}
+        <div className="mt-4">
+          <h3 className="text-lg font-medium mb-2">商品主图</h3>
+          <div className="flex flex-wrap gap-5 mb-2">
+              <div className="relative w-24 h-24">
+                <AntImage
+                  src={formData.thumb}
+                  alt={`商品主图`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+          </div>
+          <Button type="primary" onClick={() => handleOpenModal('thumb')}>
+            选择图片
+          </Button>
+        </div>
         {/* 添加图片选择区域 */}
         <div className="mt-4">
           <h3 className="text-lg font-medium mb-2">商品图片</h3>
@@ -353,7 +409,7 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
               </div>
             ))}
           </div>
-          <Button type="primary" onClick={() => setImageModalOpen(true)}>
+          <Button type="primary" onClick={() => handleOpenModal('images')}>
             选择图片
           </Button>
         </div>
@@ -450,15 +506,9 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
                     type="checkbox"
                     checked={sku.isDefault}
                     onChange={(e) => {
-                      const newSkus = [...formData.skus];
-                      // 如果设置为默认，其他SKU取消默认
-                      if (e.target.checked) {
-                        newSkus.forEach((s, i) => {
-                          s.isDefault = i === index;
-                        });
-                      } else {
-                        newSkus[index].isDefault = false;
-                      }
+                      const newSkus = formData.skus.map((sku, i) =>
+                        i === index ? { ...sku, unit: e.target.value } : { ...sku }
+                      );
                       setFormData({ ...formData, skus: newSkus });
                     }}
                     className="mr-2"
@@ -476,8 +526,9 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
                     placeholder="如：件、个、盒等"
                     value={sku.unit}
                     onChange={(e) => {
-                      const newSkus = [...formData.skus];
-                      newSkus[index].unit = e.target.value;
+                      const newSkus = formData.skus.map((sku, i) =>
+                        i === index ? { ...sku, unit: e.target.value } : { ...sku }
+                      );
                       setFormData({ ...formData, skus: newSkus });
                     }}
                     className={inputCssStyles}
@@ -491,8 +542,9 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
                     placeholder="商品重量"
                     value={sku.weight}
                     onChange={(e) => {
-                      const newSkus = [...formData.skus];
-                      newSkus[index].weight = Number(e.target.value);
+                      const newSkus = formData.skus.map((sku, i) =>
+                        i === index ? { ...sku, weight: Number(e.target.value) } : { ...sku }
+                      );
                       setFormData({ ...formData, skus: newSkus });
                     }}
                     className={inputCssStyles}
@@ -508,8 +560,9 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
                   placeholder="如：长x宽x高(cm)"
                   value={sku.dimensions}
                   onChange={(e) => {
-                    const newSkus = [...formData.skus];
-                    newSkus[index].dimensions = e.target.value;
+                    const newSkus = formData.skus.map((sku, i) =>
+                      i === index ? { ...sku, dimensions: e.target.value } : { ...sku }
+                    );
                     setFormData({ ...formData, skus: newSkus });
                   }}
                   className={inputCssStyles}
@@ -525,8 +578,9 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
                     step="0.01"
                     value={sku.retailPrice}
                     onChange={(e) => {
-                      const newSkus = [...formData.skus];
-                      newSkus[index].retailPrice = Number(e.target.value);
+                      const newSkus = formData.skus.map((sku, i) =>
+                        i === index ? { ...sku, retailPrice: Number(e.target.value) } : { ...sku }
+                      );
                       setFormData({ ...formData, skus: newSkus });
                     }}
                     className={inputCssStyles}
@@ -539,8 +593,9 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
                     step="0.01"
                     value={sku.wholesalePrice}
                     onChange={(e) => {
-                      const newSkus = [...formData.skus];
-                      newSkus[index].wholesalePrice = Number(e.target.value);
+                      const newSkus = formData.skus.map((sku, i) =>
+                        i === index ? { ...sku, wholesalePrice: Number(e.target.value) } : { ...sku }
+                      );
                       setFormData({ ...formData, skus: newSkus });
                     }}
                     className={inputCssStyles}
@@ -553,8 +608,9 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
                     step="0.01"
                     value={sku.memberPrice}
                     onChange={(e) => {
-                      const newSkus = [...formData.skus];
-                      newSkus[index].memberPrice = Number(e.target.value);
+                      const newSkus = formData.skus.map((sku, i) =>
+                        i === index ? { ...sku, memberPrice: Number(e.target.value) } : { ...sku }
+                      );
                       setFormData({ ...formData, skus: newSkus });
                     }}
                     className={inputCssStyles}
@@ -566,8 +622,9 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
                     type="number"
                     value={sku.stock}
                     onChange={(e) => {
-                      const newSkus = [...formData.skus];
-                      newSkus[index].stock = Number(e.target.value);
+                      const newSkus = formData.skus.map((sku, i) =>
+                        i === index ? { ...sku, stock: Number(e.target.value) } : { ...sku }
+                      );
                       setFormData({ ...formData, skus: newSkus });
                     }}
                     className={inputCssStyles}
@@ -583,8 +640,9 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
                   placeholder="自动生成或手动输入"
                   value={sku.code}
                   onChange={(e) => {
-                    const newSkus = [...formData.skus];
-                    newSkus[index].code = e.target.value;
+                    const newSkus = formData.skus.map((sku, i) =>
+                      i === index ? { ...sku, code: e.target.value } : { ...sku }
+                    );
                     setFormData({ ...formData, skus: newSkus });
                   }}
                   className={inputCssStyles}
@@ -593,7 +651,16 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
             </div>
           ))}
         </div>
-
+        {/* tags */}
+       <label htmlFor="tags" className={labelCssStyles}>标签（可多个，用逗号分隔）</label>
+        <input
+          type="text"
+          name="tags"
+          placeholder="如：新品,热卖,限时"
+          value={formData.tags ? formData.tags.join('，') : ''}
+          onChange={e => setFormData({ ...formData, tags: e.target.value.split('，').map(tag => tag.trim()).filter(Boolean) })}
+          className={inputCssStyles}
+        />
 
         {/* 商品属性 */}
         <div className="mt-4">
@@ -662,7 +729,7 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
         width={800}
       >
         <div>
-          <Checkbox.Group style={{ width: '100%' }} onChange={onChange}>
+          <Checkbox.Group style={{ width: '100%' }} onChange={onImageChange}>
             <Row>
               {imageList.map((item) => (
                 <Col span={8} key={item.url}>
@@ -701,4 +768,7 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
   );
 };
 
+
+
 export default CreateProductDrawer;
+      

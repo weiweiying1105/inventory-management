@@ -12,23 +12,24 @@ export const wxLogin = async (req: Request, res: Response) => {
   try {
     // 从请求中获取code参数
     const { code } = req.body;
-    console.log('code', code, res)
+    // console.log('code', code, res)
     // 调用微信接口获取openid
     const response = await axios.get(`https://api.weixin.qq.com/sns/jscode2session?appid=${APPID}&secret=${SECRET}&js_code=${code}&grant_type=authorization_code`);
-    console.log('WeChat API response:', response.data);
+    console.log('调微信登录接口的结果:', response.data);
 
-
+    // console.log('调微信登录接口的结果', response)
     // 从响应中获取openid和session_key
     const { openid, session_key } = response.data;
 
-    // 将openid和session_key保存到数据库中
+    if (!openid) {
+      return res.status(400).json({ error: "微信登录失败，未获取到 openid", data: response.data });
+    }
     let customer = await prisma.customers.findUnique({
-      where: {
-        openid
-      },
+      where: { openid }
     });
     console.log('customer', customer)
     if (!customer) {
+      console.log('没有这个用户')
       customer = await prisma.customers.create({
         data: { openid, session_key }
       });
@@ -53,7 +54,7 @@ export const wxLogin = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    // 如果发生错误，返回500状态码和错误信息
+    console.error('wxLogin error:', error);
     res.status(500).json({ error: "登录失败", message: error });
   }
 }

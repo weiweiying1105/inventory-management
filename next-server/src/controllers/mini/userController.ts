@@ -32,13 +32,15 @@ export const getCustomerInfo = async (req: Request, res: Response) => {
 }
 
 export const updateCustomerInfo = async (req: Request, res: Response) => {
-  const { openid, ...rest } = req.body;
+  const { ...rest } = req.body;
+  const { openid } = req.headers;
   if (!openid) return res.status(200).json({ code: 401, error: "openid不能为空" });
+
   const update = pickValidFields(rest);
   try {
     const user = await prisma.customers.update({
       where: {
-        openid
+        openid: openid as string
       },
       data: update
     })
@@ -60,7 +62,7 @@ export const getUserCenter = async (req: Request, res: Response) => {
       code: 200,
       message: "成功",
       data: {
-        userInfo, countsData: [], orderTagInfos: null, customerServiceInfo: null
+        userInfo, countsData: [], orderInfo: [], orderTagInfos: null, customerServiceInfo: null
       }
     })
 

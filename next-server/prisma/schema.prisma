@@ -13,6 +13,11 @@ enum OrderStatus {
   SHIPPED // 已发货
   DELIVERED // 已送达
   CANCELLED // 已取消
+  UNPAID // 待支付
+  TO_BE_SHIPPED // 待发货
+  TO_BE_RECEIVED // 待收货
+  TO_BE_REVIEWED // 待评价
+  AFTER_SALE // 售后
 }
 
 datasource db {
@@ -61,6 +66,7 @@ model Category {
   parent          Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
   subCategory     Category[] @relation("CategoryHierarchy")
   products        Products[]
+  thumbnail       String?    // 分类缩略图
 }
 
 model Sales {
@@ -103,6 +109,7 @@ model Products {
   name          String
   rating        Float?
   images        String[] // Changed from image String? to images String[]
+  thumb         String?  // 主图
   productId     Int         @id @default(autoincrement())
   categoryId    Int?
   createdAt     DateTime    @default(now())
@@ -113,6 +120,7 @@ model Products {
   isPopular     Boolean?    @default(false)
   isRecommend   Boolean?    @default(false)
   storageMethod String?
+  tags           String[]    // 产品标签
   category      Category?   @relation(fields: [categoryId], references: [id])
   purchases     Purchases[]
   sales         Sales[]
@@ -139,11 +147,10 @@ model Sku {
   product            Products    @relation(fields: [productId], references: [productId], onDelete: Cascade)
   specValues         SpecValue[] @relation("SkuToSpecValue")
   OrderItem          OrderItem[]
-
-  // 添加复合索引
-  @@index([productId])
-  @@index([productId, isDefault])
+  carts              Cart[]      @relation("SkuToCart")
 }
+
+
 
 model PurchaseSummary {
   purchaseSummaryId String   @id
@@ -252,4 +259,18 @@ model Address {
   updatedAt   DateTime  @updatedAt
 
   @@index([userId])
+}
+
+model Cart {
+  id         Int      @id @default(autoincrement())
+  openid     String  
+  skuId      Int
+  sku        Sku      @relation("SkuToCart", fields: [skuId], references: [id])
+  quantity   Int      @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([openid])
+  @@index([skuId])
+  @@unique([openid, skuId]) // 一个 openid 同一 SKU 只允许一条购物车记录
 }

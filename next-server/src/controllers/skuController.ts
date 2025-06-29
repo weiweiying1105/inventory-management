@@ -61,9 +61,11 @@ export const addProductSpecs = async (req: Request, res: Response) => {
 export const createSku = async (req: Request, res: Response) => {
   try {
     const { productId, skuList } = req.body;
+    console.log('skuList:', JSON.stringify(skuList, null, 2));
 
     const skus = await prisma.$transaction(
-      skuList.map((sku: any) =>
+      skuList.map((sku: any) => {
+        console.log('sku:', sku)
         prisma.sku.create({
           data: {
             productId: Number(productId),

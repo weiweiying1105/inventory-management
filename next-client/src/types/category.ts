@@ -5,4 +5,8 @@ export interface ICategory {
   categoryName: string;
   count: number;
   products: Product[];
+  thumbnail: string;
+  description: string;
+  parentId: number;
+  subCategoryName: string;
 }

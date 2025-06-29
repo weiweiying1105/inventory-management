@@ -6,6 +6,7 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import { syncRedisCartToDB } from './utils/redisCartSync';
 
 // 路由引入
 import dashboard from './routes/dashboardRoute'
@@ -91,4 +92,6 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.listen(port, "0.0.0.0", () => {
   console.log(`Server is running on port ${port}`);
   console.log(`Swagger UI available at http://localhost:${port}/api-docs`);
+  // 每小时自动同步一次 Redis 购物车数据到数据库
+  setInterval(syncRedisCartToDB, 60 * 60 * 1000);
 });

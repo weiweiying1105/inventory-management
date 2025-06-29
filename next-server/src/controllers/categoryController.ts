@@ -37,14 +37,15 @@ export const getAllCategories = async (req: Request, res: Response) => {
 // 创建分类
 export const createCategory = async (req: Request, res: Response) => {
   try {
-    const { categoryName, description, parentId, subCategoryName } = req.body;
+    const { categoryName, description, parentId, subCategoryName, thumbnail } = req.body;
 
     const category = await prisma.category.create({
       data: {
         categoryName,
         description,
         parentId: parentId ? Number(parentId) : null,
-        subCategoryName
+        subCategoryName,
+        thumbnail
       }
     });
 
@@ -63,7 +64,7 @@ export const createCategory = async (req: Request, res: Response) => {
 // 更新分类
 export const updateCategory = async (req: Request, res: Response) => {
   try {
-    const { categoryName, description, parentId, subCategoryName, id } = req.body;
+    const { categoryName, description, parentId, subCategoryName, id, thumbnail } = req.body;
 
     const category = await prisma.category.update({
       where: { id: Number(id) },
@@ -71,7 +72,8 @@ export const updateCategory = async (req: Request, res: Response) => {
         categoryName,
         description,
         parentId: parentId ? Number(parentId) : null,
-        subCategoryName
+        subCategoryName,
+        thumbnail
       }
     });
 

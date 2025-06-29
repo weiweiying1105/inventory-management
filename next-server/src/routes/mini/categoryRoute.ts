@@ -1,9 +1,7 @@
 import { Router } from 'express'
-import { getAllCategory } from '../../controllers/mini/categoryController'
-
+import { getAllCategories } from '../../controllers/categoryController'
 
 const router = Router()
-router.get('/categories', getAllCategory)
-
+router.get('/categories', getAllCategories)
 
 export default router

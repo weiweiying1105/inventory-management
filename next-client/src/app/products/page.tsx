@@ -60,7 +60,7 @@ const Products = () => {
     {
       title: '分类',
       dataIndex: ['category', 'categoryName'],
-      key: 'category',
+      key: 'categoryName',
     },
     {
       title: '存储方式',
