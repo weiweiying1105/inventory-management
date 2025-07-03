@@ -66,7 +66,7 @@ model Category {
   parent          Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
   subCategory     Category[] @relation("CategoryHierarchy")
   products        Products[]
-  thumbnail       String?    // 分类缩略图
+  thumbnail       String? // 分类缩略图
 }
 
 model Sales {
@@ -109,7 +109,7 @@ model Products {
   name          String
   rating        Float?
   images        String[] // Changed from image String? to images String[]
-  thumb         String?  // 主图
+  thumb         String? // 主图
   productId     Int         @id @default(autoincrement())
   categoryId    Int?
   createdAt     DateTime    @default(now())
@@ -120,7 +120,7 @@ model Products {
   isPopular     Boolean?    @default(false)
   isRecommend   Boolean?    @default(false)
   storageMethod String?
-  tags           String[]    // 产品标签
+  tags          String[] // 产品标签
   category      Category?   @relation(fields: [categoryId], references: [id])
   purchases     Purchases[]
   sales         Sales[]
@@ -149,8 +149,6 @@ model Sku {
   OrderItem          OrderItem[]
   carts              Cart[]      @relation("SkuToCart")
 }
-
-
 
 model PurchaseSummary {
   purchaseSummaryId String   @id
@@ -262,15 +260,15 @@ model Address {
 }
 
 model Cart {
-  id         Int      @id @default(autoincrement())
-  openid     String  
-  skuId      Int
-  sku        Sku      @relation("SkuToCart", fields: [skuId], references: [id])
-  quantity   Int      @default(1)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  openid    String
+  skuId     Int
+  sku       Sku      @relation("SkuToCart", fields: [skuId], references: [id])
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
+  @@unique([openid, skuId]) // 一个 openid 同一 SKU 只允许一条购物车记录
   @@index([openid])
   @@index([skuId])
-  @@unique([openid, skuId]) // 一个 openid 同一 SKU 只允许一条购物车记录
 }

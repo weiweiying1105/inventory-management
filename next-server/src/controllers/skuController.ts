@@ -66,7 +66,8 @@ export const createSku = async (req: Request, res: Response) => {
     const skus = await prisma.$transaction(
       skuList.map((sku: any) => {
         console.log('sku:', sku)
-        prisma.sku.create({
+        console.log('specValueIds:', sku.specValueIds);
+        return prisma.sku.create({
           data: {
             productId: Number(productId),
             unit: sku.unit,           // 添加单位字段
