@@ -83,7 +83,7 @@ export const createSku = async (req: Request, res: Response) => {
             }
           }
         })
-      )
+      })
     );
 
     res.json({
