@@ -61,16 +61,28 @@ export const addProductSpecs = async (req: Request, res: Response) => {
 export const createSku = async (req: Request, res: Response) => {
   try {
     const { productId, skuList } = req.body;
-    console.log('skuList:', JSON.stringify(skuList, null, 2));
-
+    // 查询该商品所有规格组及规格值，建立临时 id 到真实 id 的映射
+    const product = await prisma.products.findUnique({
+      where: { productId: Number(productId) },
+      include: {
+        specGroups: { include: { values: true } }
+      }
+    });
+    const specValueIdMap = new Map();
+    product?.specGroups.forEach((group: any) => {
+      group.values.forEach((value: any, index: number) => {
+        const frontendId = `${group.name}_${index}`;
+        specValueIdMap.set(frontendId, value.id);
+      });
+    });
     const skus = await prisma.$transaction(
       skuList.map((sku: any) => {
-        console.log('sku:', sku)
-        console.log('specValueIds:', sku.specValueIds);
+        // 将前端传来的临时 id 转换为真实 id
+        const actualSpecValueIds = sku.specValueIds?.map((frontendId: string) => specValueIdMap.get(frontendId)).filter((id: number | undefined) => id !== undefined) || [];
         return prisma.sku.create({
           data: {
             productId: Number(productId),
-            unit: sku.unit,           // 添加单位字段
+            unit: sku.unit,
             retailPrice: Number(sku.retailPrice),
             wholesalePrice: Number(sku.wholesalePrice),
             memberPrice: Number(sku.memberPrice),
@@ -80,13 +92,12 @@ export const createSku = async (req: Request, res: Response) => {
             weight: sku.weight,
             isDefault: sku.isDefault || false,
             specValues: {
-              connect: sku.specValueIds?.map((id: number) => ({ id })) || []
+              connect: actualSpecValueIds.map((id: number) => ({ id }))
             }
           }
         })
       })
     );
-
     res.json({
       code: 200,
       message: "SKU创建成功",

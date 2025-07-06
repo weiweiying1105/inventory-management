@@ -1,25 +1,53 @@
-export interface Product extends NewProduct {
-  productId: string;
-  categoryId?: number;
-}
-interface Sku { }
-export interface NewProduct {
+// types/product.ts
+
+export interface Image {
+  id: number;
+  url: string;
   name: string;
-  price: number;
-  rating?: number;
-  stockQuantity: number;
-  images: string[]; // 修改为数组以匹配 Prisma 模型
-  description?: string;
-  isHot?: boolean;
-  isNew?: boolean;
-  isPopular?: boolean;
-  isRecommend?: boolean;
-  storageMethod?: string;
-  skus: Sku[];
-  productId?: string;
-  categoryId?: number;
 }
-export interface Category {
+
+export interface SpecValue {
   id?: number;
-  categoryName: string
+  specGroupId?: number;
+  value: string;
 }
+
+export interface SpecGroup {
+  id?: number;
+  name: string;
+  values: SpecValue[];
+}
+
+export interface Sku {
+  id?: number;
+  unit: string;
+  retailPrice: number;
+  wholesalePrice: number;
+  memberPrice: number;
+  weight: number;
+  dimensions: string;
+  stock: number;
+  code: string;
+  isDefault: boolean;
+  specValues: { specGroupId: number; value: string; }[];
+}
+
+export interface Product {
+  productId: number;
+  name: string;
+  categoryId: number;
+  storageMethod: string;
+  description: string;
+  images: string[];
+  thumb: string;
+  tags: string[];
+  rating: number;
+  isPopular: boolean;
+  isHot: boolean;
+  isNew: boolean;
+  isRecommend: boolean;
+  specGroups: SpecGroup[];
+  skus: Sku[];
+}
+
+export interface NewProduct extends Omit<Product, 'productId'> { }

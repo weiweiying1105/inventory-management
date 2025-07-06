@@ -23,7 +23,7 @@ const Products = () => {
     data,
     isLoading,
     isError,
-  } = useGetProductsQuery(searchTerm);
+  }: { data: any; isLoading: boolean; isError: boolean } = useGetProductsQuery(searchTerm);
   const [checkStrictly, setCheckStrictly] = useState(false);
   const products = data?.data?.list;
   function renderImage(images: string[]) {
@@ -42,20 +42,25 @@ const Products = () => {
 
     }
   }
-  const columns = [
+  const columns: TableColumnsType<Product> = [
+    {
+      title: '主图',
+      dataIndex: 'thumb',
+      key: 'thumb',
+      render: (thumb: string) => (
+        <Image
+          src={thumb}
+          alt="Product Thumbnail"
+          width={50}
+          height={50}
+          className="w-10 h-10 object-cover rounded"
+        />
+      ),
+    },
     {
       title: '名称',
       dataIndex: 'name',
       key: 'name',
-    },
-    {
-      title: 'images',
-      dataIndex: 'images',
-      key: 'images',
-      render: (images: string[]) => (
-        // console.log(images),
-        renderImage(images)
-      ),
     },
     {
       title: '分类',
@@ -63,19 +68,22 @@ const Products = () => {
       key: 'categoryName',
     },
     {
-      title: '存储方式',
-      dataIndex: 'storageMethod',
-      key: 'storageMethod',
+      title: '零售价',
+      dataIndex: 'skus',
+      key: 'retailPrice',
+      render: (skus) => skus?.[0]?.retailPrice,
     },
     {
-      title: '描述',
-      dataIndex: 'description',
-      key: 'description',
+      title: '库存',
+      dataIndex: 'skus',
+      key: 'stock',
+      render: (skus) => skus?.[0]?.stock,
     },
     {
-      title: '评分',
-      dataIndex: 'rating',
-      key: 'rating',
+      title: '销量',
+      dataIndex: 'skus',
+      key: 'soldQuantity',
+      render: (skus) => skus?.[0]?.soldQuantity,
     },
     {
       title: '操作',
@@ -137,11 +145,10 @@ const Products = () => {
       </div>
 
       {/* TABLE */}
-      <Table<DataType>
+      <Table
         columns={columns}
-        rowSelection={{ ...rowSelection, checkStrictly }}
-        dataSource={products.map(product => ({ ...product, children: product.skus, key: product.productId }))}
-
+        rowKey="productId"
+        dataSource={products}
       />
     </div>
   );

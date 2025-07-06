@@ -22,38 +22,37 @@ export const getAllProducts = async (req: Request, res: Response): Promise<void>
       ...(isRecommend && { isRecommend: true })
     }
 
-    const [products, total] = await Promise.all([
+    const [productsData, total] = await Promise.all([
       prisma.products.findMany({
         where,
         skip,
         take: pageSize,
-        select: {
-          productId: true, // 明确返回产品id
-          name: true,
-          images: true,
-          thumb: true, // 主图
-          isHot: true,
-          isPopular: true,
-          isNew: true,
-          isRecommend: true,
-          createdAt: true,
-          storageMethod: true,
-          rating: true,
-          description: true,
+        include: {
           category: {
             select: {
               id: true,
               categoryName: true // 分类名称
             }
           },
-          skus: {
-            where: { isDefault: true }
-          }
+          skus: true
         },
         orderBy: { createdAt: 'desc' }
       }),
       prisma.products.count({ where })
     ])
+
+    const products = productsData.map(p => {
+      const prices = p.skus.flatMap(sku => [sku.retailPrice, sku.wholesalePrice, sku.memberPrice].filter(price => price != null) as number[]);
+      const linePrices = p.skus.map(sku => sku.retailPrice).filter(price => price != null);
+
+      return {
+        ...p,
+        minSalePrice: prices.length > 0 ? Math.min(...prices) : 0,
+        maxSalePrice: prices.length > 0 ? Math.max(...prices) : 0,
+        minLinePrice: linePrices.length > 0 ? Math.min(...linePrices) : 0,
+        maxLinePrice: linePrices.length > 0 ? Math.max(...linePrices) : 0,
+      };
+    });
 
     res.json({
       success: true,
@@ -321,13 +320,13 @@ export const updateProductWithSkus = async (req: Request, res: Response) => {
       isPopular,
       isNew,
       isRecommend,
-      skus,// 前端传递的sku数组，包含id（有则为更新，无则为新增）、isDefault等字段
+      skus, // 前端传递的sku数组，包含id（有则为更新，无则为新增）、isDefault等字段
       tags,
     } = req.body;
 
     const result = await prisma.$transaction(async (tx: any) => {
       // 1. 更新商品基本信息
-      const product = await tx.products.update({
+      const updatedProduct = await tx.products.update({
         where: { productId: Number(productId) },
         data: {
           name,
@@ -341,8 +340,20 @@ export const updateProductWithSkus = async (req: Request, res: Response) => {
           isPopular: isPopular || false,
           isNew: isNew || false,
           isRecommend: isRecommend || false,
-          tags: tags || []
-        }
+          tags: tags || [],
+        },
+        include: {
+          specGroups: { include: { values: true } },
+        },
+      });
+
+      // 创建ID映射
+      const specValueIdMap = new Map<string, number>();
+      updatedProduct.specGroups.forEach((group: any) => {
+        group.values.forEach((value: any, index: number) => {
+          const frontendId = `${group.name}_${index}`;
+          specValueIdMap.set(frontendId, value.id);
+        });
       });
 
       // 2. 批量处理SKU
@@ -360,12 +371,16 @@ export const updateProductWithSkus = async (req: Request, res: Response) => {
               unit: sku.unit,
               isDefault: !!sku.isDefault,
               specValues: {
-                set: sku.specValueIds?.map((id: number) => ({ id })) || []
-              }
-            }
+                set: sku.specValueIds?.map((id: number) => ({ id })) || [],
+              },
+            },
           });
         } else {
           // 新增SKU
+          const actualSpecValueIds = sku.specValueIds
+            ?.map((frontendId: string) => specValueIdMap.get(frontendId))
+            .filter((id: number | undefined): id is number => id !== undefined);
+
           await tx.sku.create({
             data: {
               productId: Number(productId),
@@ -377,9 +392,9 @@ export const updateProductWithSkus = async (req: Request, res: Response) => {
               unit: sku.unit,
               isDefault: !!sku.isDefault,
               specValues: {
-                connect: sku.specValueIds?.map((id: number) => ({ id })) || []
-              }
-            }
+                connect: actualSpecValueIds?.map((id: number) => ({ id })) || [],
+              },
+            },
           });
         }
       }
@@ -387,7 +402,7 @@ export const updateProductWithSkus = async (req: Request, res: Response) => {
       const existingSkuIds = skus.filter((s: any) => s.id).map((s: any) => Number(s.id));
       await tx.sku.deleteMany({ where: { productId: Number(productId), id: { notIn: existingSkuIds } } });
 
-      return product;
+      return updatedProduct;
     }, {
       timeout: 10000, // 增加到10秒
     });
@@ -406,7 +421,7 @@ export const updateProductWithSkus = async (req: Request, res: Response) => {
 export const getProductDetail = async (req: Request, res: Response) => {
   try {
     const { id } = req.query;
-    const product = await prisma.products.findUnique({
+    const productData = await prisma.products.findUnique({
       where: { productId: Number(id) },
       include: {
         specGroups: {
@@ -418,21 +433,27 @@ export const getProductDetail = async (req: Request, res: Response) => {
           include: {
             specValues: true
           }
-        }
-        //{
-        // include: {
-        //   specValues: true // 添加这一行以包含 skuValues
-        // }
-        // }
-
+        },
+        category: true
       }
     });
 
-    if (!product) {
+    if (!productData) {
       return res.status(404).json({
         success: false,
         error: '产品不存在'
       });
+    }
+
+    const prices = productData.skus.flatMap(sku => [sku.retailPrice, sku.wholesalePrice, sku.memberPrice].filter(price => price != null) as number[]);
+    const linePrices = productData.skus.map(sku => sku.retailPrice).filter(price => price != null);
+
+    const product = {
+      ...productData,
+      minSalePrice: prices.length > 0 ? Math.min(...prices) : 0,
+      maxSalePrice: prices.length > 0 ? Math.max(...prices) : 0,
+      minLinePrice: linePrices.length > 0 ? Math.min(...linePrices) : 0,
+      maxLinePrice: linePrices.length > 0 ? Math.max(...linePrices) : 0,
     }
 
     res.json({
