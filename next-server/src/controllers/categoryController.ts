@@ -8,28 +8,39 @@ export const getAllCategories = async (req: Request, res: Response) => {
   try {
     const categories = await prisma.category.findMany({
       where: {
-        AND: [
-          { parentId: null }  // 修改查询条件格式
-        ]
+        parentId: null,
       },
       include: {
         subCategory: {
           include: {
-            subCategory: true
-          }
+            subCategory: true, // 继续包含更深层次的子分类
+          },
         },
-        products: true
-      }
+      },
     });
+
+    // 递归函数，将 subCategory 重命名为 children
+    const transformCategories = (categories: any[]) => {
+      return categories.map(category => {
+        const newCategory = { ...category, children: [] };
+        if (newCategory.subCategory && newCategory.subCategory.length > 0) {
+          newCategory.children = transformCategories(newCategory.subCategory);
+        }
+        delete newCategory.subCategory; // 删除原始的 subCategory 字段
+        return newCategory;
+      });
+    };
+
+    const transformedCategories = transformCategories(categories);
 
     res.json({
       success: true,
-      data: categories
+      list: transformedCategories, // 返回转换后的数据
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: '获取分类列表失败'
+      error: '获取分类列表失败',
     });
   }
 };

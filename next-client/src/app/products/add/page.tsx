@@ -9,20 +9,26 @@
 "use client"
 import React, { ChangeEvent, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { NewProduct } from "@/types/product";
+import { NewProduct, Product, Sku, SpecGroup, SpecValue, Image } from "@/types/product";
 import { useGetImagePageQuery, useGetCategoriesQuery, useCreateProductMutation, useUpdateProductMutation, useGetProductDetailQuery } from "../../state/api";
 import { Drawer, Modal, Image as AntImage, Select, Button, Pagination, } from "antd";
 import { Checkbox, Col, Row } from 'antd';
 import type { GetProp } from 'antd';
 import { ICategory } from "@/types/category"
 import { TreeSelect } from "antd";
-import { truncate } from "fs";
+import 'react-quill-new/dist/quill.snow.css';
+import dynamic from 'next/dynamic';
 
-type CreateProductDrawerProps = {
+const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
+// Frontend-specific types for form state
+interface FormSku extends Sku {
+  specValueNames?: string;
 }
 
-const CreateProductDrawer = (props: CreateProductDrawerProps) => {
+type FormData = Product;
+
+const CreateProductDrawer = () => {
   const searchParams = useSearchParams();
   const productId = searchParams.get("id");
   const router = useRouter()
@@ -31,34 +37,36 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
   const [page, setPage] = useState(1);
   const SIZE = 100;
   const [selectedImages, setSelectImages] = useState<string[]>([]);
-  const [imageList, setImageList] = useState<string[]>([]);
-  const { data: categories, isLoading } = useGetCategoriesQuery("");
-  const list = categories?.data || [];
+  const [imageList, setImageList] = useState<Image[]>([]);
+  const { data: categoriesData, isLoading } = useGetCategoriesQuery("");
+  const list = categoriesData?.list || [];
   // 获取图片列表
   const { data: imageData } = useGetImagePageQuery({
     page: 1,
     size: 100
   });
-  const [formData, setFormData] = useState({
-    tags:[],
+  const pagination = imageData?.pagination || { total: 0, page: 1, size: 10 };
+  const [formData, setFormData] = useState<FormData>({
+    productId: 0,
+    tags: [],
     name: '',
     categoryId: 0,
     storageMethod: '',
     description: '',
-    images: [] as string[],
+    images: [],
     thumb: '',
     rating: 0,
     isPopular: false,
     isHot: false,
     isNew: false,
     isRecommend: false,
-    specGroups: [   // 示例：
+    specGroups: [
       {
         name: '',
         values: [
           { value: '' },
         ]
-      }], // 添加规格组字段
+      }],
     skus: [{
       unit: '',
       retailPrice: 0,
@@ -69,35 +77,20 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
       stock: 0,
       code: '',
       isDefault: true,
-      specValues: [
-        // 示例：
-        // {
-        //   specValueIds: [1, 3], // 对应红色+S的规格值ID
-        //   retailPrice: 100,
-        //   wholesalePrice: 80,
-        //   memberPrice: 90,
-        //   stock: 50,
-        //   code: 'AUTO_GENERATED',
-        //   unit: '件',
-        //   weight: 0.5,
-        //   dimensions: '10x10x5',
-        //   isDefault: false
-      ] // 添加规格值字段
+      specValues: []
     }]
   });
   // 获取图片库
   useEffect(() => {
-    console.log('imageData', imageData?.list);
     if (imageData?.list) {
-      setImageList(imageData?.list);
+      setImageList(imageData.list);
     }
   }, [imageData?.list, page])
   // 接口获取产品详情
-  const { data: productDetail } = productId ? useGetProductDetailQuery({ id: productId }) : { data: null };
+  const { data: productDetail } = productId ? useGetProductDetailQuery({ id: Number(productId) }) : { data: null };
   useEffect(() => {
     if (productDetail) {
-      //  console.log('productDetail', productDetail?.data);
-      productDetail && productDetail?.data && setFormData(productDetail?.data);
+      setFormData(productDetail as FormData);
     }
   }, [productDetail])
 
@@ -122,21 +115,14 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
   };
   const [createProduct] = useCreateProductMutation();
   const [updateProduct] = useUpdateProductMutation();
-  const handleSubmit = async (productData: NewProduct) => {
+  const handleSubmit = async (productData: FormData) => {
     console.log('productData', productData);
-    for (const key in productData) {
-      if (productData[key as keyof NewProduct] === '') {
-        console.log(key + '为空', productData[key as keyof NewProduct]);
-        return;
-      }
-    }
-    // 自动添加 defaultSku 字段
-    const defaultSku = productData.skus.find(sku => sku.isDefault) || productData.skus[0];
+
     if (productData.productId) {
-      await updateProduct({ ...productData, defaultSku });
+      await updateProduct(productData);
 
     } else {
-      const res = await createProduct({ ...productData, defaultSku });
+      const res = await createProduct(productData as NewProduct);
     }
 
     router.back()
@@ -181,7 +167,7 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
     if (formData.skus.length === 1) {
       return; // 保留至少一个 SKU
     }
-    const newSkus = formData.skus.filter((_, i) => i !== index);
+    const newSkus = formData.skus.filter((_: Sku, i: number) => i !== index);
     setFormData({
       ...formData,
       skus: newSkus
@@ -232,21 +218,23 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
   // 添加规格值
   const handleAddSpecValue = (groupIndex: number) => {
     const newSpecGroups = [...formData.specGroups];
-    newSpecGroups[groupIndex].values.push({ value: '' });
+    newSpecGroups[groupIndex].values?.push({ value: '' });
     setFormData({ ...formData, specGroups: newSpecGroups });
   };
 
   // 删除规格值
   const handleRemoveSpecValue = (groupIndex: number, valueIndex: number) => {
     const newSpecGroups = [...formData.specGroups];
-    newSpecGroups[groupIndex].values = newSpecGroups[groupIndex].values.filter((_, i) => i !== valueIndex);
+    newSpecGroups[groupIndex].values = newSpecGroups[groupIndex].values?.filter((_: SpecValue, i: number) => i !== valueIndex);
     setFormData({ ...formData, specGroups: newSpecGroups });
   };
 
   // 更新规格值
   const handleSpecValueChange = (groupIndex: number, valueIndex: number, value: string) => {
     const newSpecGroups = [...formData.specGroups];
-    newSpecGroups[groupIndex].values[valueIndex] = { value };
+    if (newSpecGroups[groupIndex].values) {
+      newSpecGroups[groupIndex].values![valueIndex] = { value };
+    }
     setFormData({ ...formData, specGroups: newSpecGroups });
   };
 
@@ -254,15 +242,17 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
   const generateSkuCombinations = () => {
     // 过滤掉无效的规格组和规格值
     const validGroups = formData.specGroups
-      .filter(group => group.name && group.values && group.values.some(v => v.value))
+      .filter(group => group && group.name && group.values && group.values.some(v => v && v.value))
       .map(group => ({
-        name: group.name,
-        values: group.values.filter(v => v.value)
+        ...group,
+        values: group.values!.filter(v => v && v.value)
       }));
+
     if (validGroups.length === 0) {
       // 如果没有有效规格组，创建一个默认SKU
       return [{
         specValueIds: [],
+        specValueNames: '默认规格',
         retailPrice: 0,
         wholesalePrice: 0,
         memberPrice: 0,
@@ -274,24 +264,29 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
         isDefault: true
       }];
     }
+
     // 计算所有规格值的组合
     const groups = validGroups.map(group =>
-      group.values.map(value => ({
-        groupName: group.name,
-        value: value.value,
-        id: value.id || `${group.name}-${value.value}`
+      group.values.map((value, valueIndex) => ({
+        groupName: group.name!,
+        value: value.value!,
+        id: value.id, // 保留已存在的ID
+        tempId: `${group.name}_${valueIndex}` // 生成与后端匹配的临时ID
       }))
     );
+
     // Cartesian product utility
-    function cartesian(arr) {
+    function cartesian<T>(arr: T[][]): T[][] {
       if (arr.length === 0) return [];
-      if (arr.length === 1) return arr[0].map(item => [item]);
-      return arr.reduce((a, b) => a.flatMap(d => b.map(e => [].concat(d, e))));
+      if (arr.length === 1) return arr[0].map((item: T) => [item]);
+      return arr.reduce((a: T[][], b: T[]) => a.flatMap((d: T[]) => b.map((e: T) => [...d, e])), [[]] as T[][]);
     }
+
     const allCombinations = groups.length > 0 ? cartesian(groups) : [];
+
     return allCombinations.map((combination, index) => ({
-      specValueIds: combination.map(item => item.id),
-      specValueNames: combination.map(item => `${item.groupName}:${item.value}`).join(', '),
+      specValueIds: combination.map((item: any) => item.tempId),
+      specValueNames: combination.map((item: any) => `${item.groupName}:${item.value}`).join(', '),
       retailPrice: 0,
       wholesalePrice: 0,
       memberPrice: 0,
@@ -303,19 +298,61 @@ const CreateProductDrawer = (props: CreateProductDrawerProps) => {
       isDefault: index === 0
     }));
   };
+
   // 当规格组变化时，重新生成SKU
   const handleSpecGroupsChange = () => {
-    const newSkus = generateSkuCombinations();
-    setFormData({ ...formData, skus: newSkus });
+    // 备份旧的SKU数据，以便在重新生成时保留用户输入
+    const oldSkusMap = new Map<string, FormSku>();
+    const groupNameMap = new Map(formData.specGroups.map(g => [g.id, g.name]));
+
+    formData.skus.forEach(sku => {
+      let key;
+      if (sku.specValues && sku.specValues.length > 0) {
+        key = sku.specValues
+          .map(v => `${groupNameMap.get(v.specGroupId) || ''}:${v.value}`)
+          .sort()
+          .join(',');
+      } else if (sku.specValueNames) {
+        key = sku.specValueNames.split(', ').sort().join(',')
+      } else {
+        key = '默认规格';
+      }
+      oldSkusMap.set(key, sku);
+    });
+
+    const newSkuCombos = generateSkuCombinations();
+
+    const newSkus = newSkuCombos.map(combo => {
+      const key = combo.specValueNames
+        ? combo.specValueNames.split(', ').sort().join(',')
+        : '默认规格';
+
+      const oldSku = oldSkusMap.get(key);
+      if (oldSku) {
+        return { ...oldSku, specValues: combo.specValues, specValueNames: combo.specValueNames };
+      }
+      return { ...combo, specValues: [] } as FormSku;
+    });
+
+    if (newSkus.length === 0) {
+      const defaultSku = oldSkusMap.get('默认规格') || {
+        unit: '', retailPrice: 0, wholesalePrice: 0, memberPrice: 0, weight: 0,
+        dimensions: '', stock: 0, code: '', isDefault: true, specValues: [],
+        specValueIds: [], specValueNames: '默认规格'
+      };
+      setFormData({ ...formData, skus: [defaultSku] });
+    } else {
+      setFormData({ ...formData, skus: newSkus });
+    }
   };
 
-const [chooseImgType, setChooseImgType] = useState('image');
-const handleOpenModal = (type:string) => {
+  const [chooseImgType, setChooseImgType] = useState('image');
+  const handleOpenModal = (type: string) => {
     setChooseImgType(type);
     setImageModalOpen(true);
-}
-   
-  
+  }
+
+
   return (
     <>
 
@@ -335,32 +372,32 @@ const handleOpenModal = (type:string) => {
         />
 
         <label htmlFor="categoryId" className={labelCssStyles}>Category</label>
-         <TreeSelect
-              allowClear
-              placeholder="请选择父级分类"
-              treeDefaultExpandAll
-              treeData={list.map((category: ICategory) => ({
-                title: category.categoryName,
-                value: category.id,
-                key: category.id,
-                children: Array.isArray(category.subCategory) && category.subCategory.length > 0
-                  ? category.subCategory.map((sub: ICategory) => ({
-                      title: sub.categoryName,
-                      value: sub.id,
-                      key: sub.id,
-                      children: Array.isArray(sub.subCategory) && sub.subCategory.length > 0
-                        ? sub.subCategory.map((sub2: ICategory) => ({
-                            title: sub2.categoryName,
-                            value: sub2.id,
-                            key: sub2.id,
-                            children: sub2.subCategory // 可继续递归
-                          }))
-                        : undefined
+        <TreeSelect
+          allowClear
+          placeholder="请选择父级分类"
+          treeDefaultExpandAll
+          treeData={list.map((category: ICategory) => ({
+            title: category.categoryName,
+            value: category.id,
+            key: category.id,
+            children: Array.isArray(category.children) && category.children.length > 0
+              ? category.children.map((sub: ICategory) => ({
+                title: sub.categoryName,
+                value: sub.id,
+                key: sub.id,
+                children: Array.isArray(sub.children) && sub.children.length > 0
+                  ? sub.children.map((sub2: ICategory) => ({
+                    title: sub2.categoryName,
+                    value: sub2.id,
+                    key: sub2.id,
+                    children: sub2.children // 可继续递归
                   }))
-                : undefined
-              }))}
-              onChange={(value) => setFormData({ ...formData, categoryId: value })}
-            />
+                  : undefined
+              }))
+              : undefined
+          }))}
+          onChange={(value) => setFormData({ ...formData, categoryId: Number(value) })}
+        />
         <label htmlFor="storageMethod" className={labelCssStyles}>存储方式</label>
         <input
           type="text"
@@ -372,25 +409,26 @@ const handleOpenModal = (type:string) => {
           required
         />
         <label htmlFor="description" className={labelCssStyles}>描述</label>
-        <textarea
-          name="description"
-          placeholder="描述（选填）"
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+        <ReactQuill 
+          theme="snow"
           value={formData.description}
-          className={inputCssStyles}
+          onChange={(value) => setFormData({ ...formData, description: value })}
+          className='bg-white mb-2'
         />
-         {/* 添加图片选择区域 */}
+        {/* 添加图片选择区域 */}
         <div className="mt-4">
           <h3 className="text-lg font-medium mb-2">商品主图</h3>
           <div className="flex flex-wrap gap-5 mb-2">
-              <div className="relative w-24 h-24">
-                <AntImage
-                  src={formData.thumb}
-                  alt={`商品主图`}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+        {formData.thumb && (
+          <div className="relative w-24 h-24">
+            <AntImage
+              src={formData.thumb}
+              alt={`商品主图`}
+              className="w-full h-full object-cover"
+            />
           </div>
+        )}
+      </div>
           <Button type="primary" onClick={() => handleOpenModal('thumb')}>
             选择图片
           </Button>
@@ -482,7 +520,7 @@ const handleOpenModal = (type:string) => {
             <Button
               type="default"
               onClick={handleSpecGroupsChange}
-              disabled={formData.specGroups.length === 0}
+              disabled={formData.specGroups?.length === 0}
             >
               根据规格组合生成SKU
             </Button>
@@ -506,9 +544,10 @@ const handleOpenModal = (type:string) => {
                     type="checkbox"
                     checked={sku.isDefault}
                     onChange={(e) => {
-                      const newSkus = formData.skus.map((sku, i) =>
-                        i === index ? { ...sku, unit: e.target.value } : { ...sku }
-                      );
+                      const newSkus = formData.skus.map((s, i) => ({
+                        ...s,
+                        isDefault: i === index
+                      }));
                       setFormData({ ...formData, skus: newSkus });
                     }}
                     className="mr-2"
@@ -526,8 +565,8 @@ const handleOpenModal = (type:string) => {
                     placeholder="如：件、个、盒等"
                     value={sku.unit}
                     onChange={(e) => {
-                      const newSkus = formData.skus.map((sku, i) =>
-                        i === index ? { ...sku, unit: e.target.value } : { ...sku }
+                      const newSkus = formData.skus.map((s, i) =>
+                        i === index ? { ...s, unit: e.target.value } : s
                       );
                       setFormData({ ...formData, skus: newSkus });
                     }}
@@ -542,8 +581,8 @@ const handleOpenModal = (type:string) => {
                     placeholder="商品重量"
                     value={sku.weight}
                     onChange={(e) => {
-                      const newSkus = formData.skus.map((sku, i) =>
-                        i === index ? { ...sku, weight: Number(e.target.value) } : { ...sku }
+                      const newSkus = formData.skus.map((s, i) =>
+                        i === index ? { ...s, weight: Number(e.target.value) } : s
                       );
                       setFormData({ ...formData, skus: newSkus });
                     }}
@@ -560,8 +599,8 @@ const handleOpenModal = (type:string) => {
                   placeholder="如：长x宽x高(cm)"
                   value={sku.dimensions}
                   onChange={(e) => {
-                    const newSkus = formData.skus.map((sku, i) =>
-                      i === index ? { ...sku, dimensions: e.target.value } : { ...sku }
+                    const newSkus = formData.skus.map((s, i) =>
+                      i === index ? { ...s, dimensions: e.target.value } : s
                     );
                     setFormData({ ...formData, skus: newSkus });
                   }}
@@ -578,8 +617,8 @@ const handleOpenModal = (type:string) => {
                     step="0.01"
                     value={sku.retailPrice}
                     onChange={(e) => {
-                      const newSkus = formData.skus.map((sku, i) =>
-                        i === index ? { ...sku, retailPrice: Number(e.target.value) } : { ...sku }
+                      const newSkus = formData.skus.map((s, i) =>
+                        i === index ? { ...s, retailPrice: Number(e.target.value) } : s
                       );
                       setFormData({ ...formData, skus: newSkus });
                     }}
@@ -593,14 +632,18 @@ const handleOpenModal = (type:string) => {
                     step="0.01"
                     value={sku.wholesalePrice}
                     onChange={(e) => {
-                      const newSkus = formData.skus.map((sku, i) =>
-                        i === index ? { ...sku, wholesalePrice: Number(e.target.value) } : { ...sku }
+                      const newSkus = formData.skus.map((s, i) =>
+                        i === index ? { ...s, wholesalePrice: Number(e.target.value) } : s
                       );
                       setFormData({ ...formData, skus: newSkus });
                     }}
                     className={inputCssStyles}
                   />
                 </div>
+              </div>
+
+              {/* 会员价和库存 */}
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className={labelCssStyles}>会员价</label>
                   <input
@@ -608,8 +651,8 @@ const handleOpenModal = (type:string) => {
                     step="0.01"
                     value={sku.memberPrice}
                     onChange={(e) => {
-                      const newSkus = formData.skus.map((sku, i) =>
-                        i === index ? { ...sku, memberPrice: Number(e.target.value) } : { ...sku }
+                      const newSkus = formData.skus.map((s, i) =>
+                        i === index ? { ...s, memberPrice: Number(e.target.value) } : s
                       );
                       setFormData({ ...formData, skus: newSkus });
                     }}
@@ -622,8 +665,8 @@ const handleOpenModal = (type:string) => {
                     type="number"
                     value={sku.stock}
                     onChange={(e) => {
-                      const newSkus = formData.skus.map((sku, i) =>
-                        i === index ? { ...sku, stock: Number(e.target.value) } : { ...sku }
+                      const newSkus = formData.skus.map((s, i) =>
+                        i === index ? { ...s, stock: Number(e.target.value) } : s
                       );
                       setFormData({ ...formData, skus: newSkus });
                     }}
@@ -631,51 +674,13 @@ const handleOpenModal = (type:string) => {
                   />
                 </div>
               </div>
-
-              {/* SKU编码 */}
-              <div className="mb-4">
-                <label className={labelCssStyles}>SKU编码</label>
-                <input
-                  type="text"
-                  placeholder="自动生成或手动输入"
-                  value={sku.code}
-                  onChange={(e) => {
-                    const newSkus = formData.skus.map((sku, i) =>
-                      i === index ? { ...sku, code: e.target.value } : { ...sku }
-                    );
-                    setFormData({ ...formData, skus: newSkus });
-                  }}
-                  className={inputCssStyles}
-                />
-              </div>
             </div>
           ))}
         </div>
-        {/* tags */}
-       <label htmlFor="tags" className={labelCssStyles}>标签（可多个，用逗号分隔）</label>
-        <input
-          type="text"
-          name="tags"
-          placeholder="如：新品,热卖,限时"
-          value={formData.tags ? formData.tags.join('，') : ''}
-          onChange={e => setFormData({ ...formData, tags: e.target.value.split('，').map(tag => tag.trim()).filter(Boolean) })}
-          className={inputCssStyles}
-        />
 
-        {/* 商品属性 */}
-        <div className="mt-4">
-          <h3 className="text-lg font-medium">商品属性</h3>
-          <div className="flex flex-wrap gap-4 mt-2">
-            <label className="inline-flex items-center">
-              <input
-                type="checkbox"
-                name="isPopular"
-                checked={formData.isPopular}
-                onChange={(e) => setFormData({ ...formData, isPopular: e.target.checked })}
-                className="mr-2"
-              />
-              热门
-            </label>
+        <div className="flex justify-between items-center mt-4">
+          <h3 className="text-lg font-medium">商品状态</h3>
+          <div className="flex gap-4">
             <label className="inline-flex items-center">
               <input
                 type="checkbox"
@@ -684,7 +689,17 @@ const handleOpenModal = (type:string) => {
                 onChange={(e) => setFormData({ ...formData, isHot: e.target.checked })}
                 className="mr-2"
               />
-              热销
+              热门
+            </label>
+            <label className="inline-flex items-center">
+              <input
+                type="checkbox"
+                name="isPopular"
+                checked={formData.isPopular}
+                onChange={(e) => setFormData({ ...formData, isPopular: e.target.checked })}
+                className="mr-2"
+              />
+              流行
             </label>
             <label className="inline-flex items-center">
               <input
@@ -709,66 +724,45 @@ const handleOpenModal = (type:string) => {
           </div>
         </div>
 
-        {/* 按钮部分保持不变 */}
-        <div className="flex justify-end mt-4">
-          <Button type="primary" htmlType="submit">
-            创建
-          </Button>
-        </div>
+        <button type="submit" className="mt-4 w-full bg-blue-500 text-white p-2 rounded-md">
+          {productId ? '更新商品' : '创建商品'}
+        </button>
       </form>
 
-
-      {/* 图片选择模态框保持不变 */}
-
-      {/* 图片选择模态框 */}
       <Modal
-        title="选择商品图片"
+        title="选择图片"
         open={imageModalOpen}
-        onCancel={() => setImageModalOpen(false)}
         onOk={handleConfirmImages}
+        onCancel={() => setImageModalOpen(false)}
         width={800}
       >
-        <div>
-          <Checkbox.Group style={{ width: '100%' }} onChange={onImageChange}>
-            <Row>
-              {imageList.map((item) => (
-                <Col span={8} key={item.url}>
-                  <Checkbox value={item.url}>
-                    <div
-                      className={`relative cursor-pointer border-2 ${selectedImages.includes(item.url) ? 'border-blue-500' : 'border-transparent'}`}
-
-                    >
-                      <AntImage
-                        src={item.url}
-                        alt={item.name}
-                        className="w-full h-32 object-cover"
-                      />
-                      {selectedImages.includes(item.url) && (
-                        <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center">
-                          ✓
-                        </div>
-                      )}
-                    </div>
-                  </Checkbox>
-                </Col>
-              ))}
-            </Row>
-          </Checkbox.Group>
-        </div>
-        <div className="mt-4 flex justify-center">
-          <Pagination
-            current={page}
-            total={imageData?.total || 0}
-            pageSize={SIZE}
-            onChange={(page) => setPage(page)}
-          />
-        </div>
-      </Modal >
+        <Checkbox.Group style={{ width: '100%' }} onChange={onImageChange}>
+          <Row gutter={[16, 16]}>
+            {imageList.map((image) => (
+              <Col span={4} key={image.id}>
+                <Checkbox value={image.url}>
+                  <AntImage
+                    src={image.url}
+                    alt={image.name}
+                    width="100%"
+                    preview={false}
+                  />
+                </Checkbox>
+              </Col>
+            ))}
+          </Row>
+        </Checkbox.Group>
+        <Pagination
+          current={page}
+          pageSize={SIZE}
+          total={imageData?.pagination?.total || 0}
+          onChange={(page) => setPage(page)}
+          className="mt-4 text-center"
+        />
+      </Modal>
     </>
   );
 };
-
-
 
 export default CreateProductDrawer;
       

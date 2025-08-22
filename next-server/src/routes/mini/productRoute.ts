@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getProducts, getProductDetail } from "../../controllers/mini/productController";
+const { getProducts, getProductDetail } = require("../../controllers/mini/productController");
 
 const router = Router();
 
