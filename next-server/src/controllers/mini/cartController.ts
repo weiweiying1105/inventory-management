@@ -7,26 +7,43 @@ const redis = new Redis();
 
 // 获取购物车列表
 export const getCart = async (req: Request, res: Response) => {
-  const openid = req.query.openid as string;
+  const { openid } = req.headers;
   if (!openid) return res.status(400).json({ error: "缺少 openid" });
   const redisKey = `cart:${openid}`;
+try{
+  // 1. 优先从Redis缓存中获取
   let cartList = await redis.get(redisKey);
   if (cartList) {
-    // redis缓存中有数据，直接返回
-    res.json(JSON.parse(cartList));
-    return;
+    const cachedData = JSON.parse(cartList);
+    return res.json({
+      ...cachedData,
+      requestId: mockReqId(),
+      clientIp: mockIp(),
+      rt: Date.now() - startTime
+    });
   }
+
+}catch(error){
+
+}
+
+  // 2. Redis中没有数据，从数据库查询
   const cart = await prisma.cart.findMany({
-    where: { openid },
+    where: { openid: openid as string },
     include: { sku: true }
   });
+
+  // 3. 将数据库查询结果存入Redis缓存，设置3天过期时间
   await redis.set(redisKey, JSON.stringify(cart), "EX", 3 * 24 * 60 * 60);
+
+  // 4. 返回数据库查询结果
   res.json(cart);
 };
 
 // 添加/更新购物车（优先操作 Redis，三天有效期）
 export const addToCart = async (req: Request, res: Response) => {
-  const { openid, skuId, quantity } = req.body;
+  const { openid } = req.headers;
+  const { skuId, quantity } = req.body;
   // 校验参数
   if (!openid || !skuId) return res.status(400).json({ error: "缺少参数" });
   const redisKey = `cart:${openid}`;
@@ -51,7 +68,7 @@ export const addToCart = async (req: Request, res: Response) => {
   if (!found) {
     // 查询 productId
     const sku = await prisma.sku.findUnique({ where: { id: skuId }, select: { productId: true } });
-    cartArr.push({ openid, skuId, quantity: quantity || 1, productId: sku ? sku.productId : undefined });
+    cartArr.push({ skuId, quantity: quantity || 1, productId: sku ? sku.productId : undefined });
   }
   // 更新 Redis，设置三天过期
   await redis.set(redisKey, JSON.stringify(cartArr), "EX", 3 * 24 * 60 * 60);

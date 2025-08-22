@@ -76,9 +76,28 @@ export const getProductDetail = async (req: Request, res: Response) => {
         }
       }
     });
-    console.log('@@@@@@', product)
+
     if (!product) {
       return res.status(404).json({ error: "商品不存在" });
+    } else {
+      product.skus = product.skus.map(i => {
+        const { id, ...rest } = i;
+        i.specValues = i.specValues.map(a => {
+          return {
+            ...a,
+            specValueId: a.id
+          }
+        })
+        return {
+          ...rest,
+          skuId: id,
+          stockInfo: {
+            stockQuantity: i.stock || 0
+          },
+          specInfo: i.specValues || []
+        } as any
+      })
+      // console.log('@@@@@@', product)
     }
     // 组装前端所需结构
     const details: any = {
@@ -91,22 +110,27 @@ export const getProductDetail = async (req: Request, res: Response) => {
     // 计算所有 sku 库存总和
     const totalStock = details.skuList.reduce((sum: number, sku: any) => sum + (sku.stock || 0), 0);
     details.spuStockQuantity = totalStock === 0 ? 0 : totalStock;
+
+    // 计算最低售价和最高售价
+    const prices = details.skuList.map((sku: any) => sku.retailPrice).filter((price: any) => price != null);
+    details.minSalePrice = prices.length > 0 ? Math.min(...prices) : 0;
+    details.maxSalePrice = prices.length > 0 ? Math.max(...prices) : 0;
+
     // 为每个规格值增加 hasStockObj 字段
     if (details.specList && details.skuList) {
       details.specList.forEach((group: any) => {
         if (group.values && group.values.length > 0) {
           group.values = group.values.map((subItem: any) => {
-            const obj = details.skuList.find((sku: any) => sku.id && Array.isArray(sku.specValues) && sku.specValues.some((v: any) => v.id === subItem.id));
-
             return {
               ...subItem,
-              hasStockObj: {
-                hasStock: !!obj && obj.stock > 0,
-                specsArray: obj ? obj.specValues.map((v: any) => v.id) : []
-              }
+              specValueId: subItem.id,
+              id: undefined,
+              specValue: subItem.value,
             };
           });
         }
+        group.specId = group.id;
+
       });
     }
     const soldCount = await prisma.orderItem.aggregate({

@@ -25,6 +25,7 @@ import miniAuth from './routes/mini/authRoute'
 import userRoute from './routes/mini/userRoute'
 import miniCategory from './routes/mini/categoryRoute'
 import miniProduct from './routes/mini/productRoute'
+import miniCart from './routes/mini/cartRoute'
 //------------------------------------------------ mini路由end
 
 //------------------------------------------------ 中间件
@@ -84,6 +85,7 @@ app.use('/mini', miniAuth)
 app.use('/mini', userRoute)
 app.use('/mini', miniCategory)
 app.use('/mini', miniProduct)
+app.use('/mini', miniCart)
 
 // 小程序------------------------------------------end
 const port = Number(process.env.PORT) || 3001;
